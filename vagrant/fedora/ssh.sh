@@ -16,7 +16,6 @@ fi
 
 if [ "$(hostname)" = "controlplane01" ]
 then
-    sh -c 'sudo apt update' &> /dev/null
-    sh -c 'sudo apt-get install -y sshpass' &> /dev/null
+    sh -c 'sudo dnf install -y sshpass' &> /dev/null
 fi
 

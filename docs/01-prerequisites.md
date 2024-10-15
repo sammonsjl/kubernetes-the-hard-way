@@ -1,43 +1,25 @@
-# Kubernetes The Hard Way on VirtualBox
-
-Begin here if your machine is Windows or Intel Mac. For these machines, we use VirtualBox as the hypervisor, and Vagrant to provision the Virtual Machines.
-
-This should also work with Linux (as the host operating system, not running in a VM), but it not so far tested.
+# Kubernetes The Hard Way on KVM
 
 ## Prerequisites
 
 
 ### Hardware Requirements
 
-This lab provisions 5 VMs on your workstation. That's a lot of compute resource!
+This lab provisions 6 VMs on your workstation.
 
 - 16GB RAM. It may work with less, but will be slow and may crash unexpectedly.
 - 8 core or better CPU e.g. Intel Core-i7/Core-i9, AMD Ryzen-7/Ryzen-9. May work with fewer, but will be slow and may crash unexpectedly.
 - 50 GB disk space
 
-### VirtualBox
+### KVM
 
-Download and install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) on any one of the supported platforms:
-
- - Windows
- - Intel Mac
- - Linux
+Download and install [KVM](https://linux-kvm.org/page/HOWTO) on the Linux Host
 
 ### Vagrant
 
-Once VirtualBox is installed you may chose to deploy virtual machines manually on it.
-Vagrant provides an easier way to deploy multiple virtual machines on VirtualBox more consistently.
+Vagrant provides an easy way to deploy multiple virtual machines on KVM consistently.
 
-Download and install [Vagrant](https://www.vagrantup.com/) on your platform.
-
-- Windows
-- Debian/Ubuntu
-- CentOS
-- Linux
-- Intel Mac
-
-This tutorial assumes that you have also installed Vagrant.
-
+Download and install [Vagrant](https://www.vagrantup.com/) on the Linux Host.
 
 ### Lab Defaults
 
@@ -52,7 +34,7 @@ If you do change any of these, **please consider that a personal preference and 
 
 #### Virtual Machine Network
 
-The network used by the VirtualBox virtual machines is `192.168.56.0/24`.
+The network used by the VirtualBox virtual machines is `192.168.100.0/24`.
 
 To change this, edit the [Vagrantfile](../../vagrant/Vagrantfile) in your cloned copy (do not edit directly in github), and set the new value for the network prefix at line 9. This should not overlap any of the other network settings.
 

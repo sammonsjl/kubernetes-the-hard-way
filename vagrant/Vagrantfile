@@ -3,7 +3,7 @@
 
 # Define how much memory your computer has in GB (e.g. 8, 16)
 # Larger nodes will be created if you have more.
-RAM_SIZE = 16
+RAM_SIZE = 32
 
 # Define how mnay CPU cores you have.
 # More powerful workers will be created if you have more
@@ -11,7 +11,7 @@ CPU_CORES = 8
 
 # Internal network prefix for the VM network
 # See the documentation before changing this
-IP_NW = "192.168.56."
+IP_NW = "192.168.100."
 
 # Calculate resource amounts
 # based on RAM/CPU
@@ -38,30 +38,20 @@ RESOURCES = {
   },
 }
 
-# Sets up hosts file and DNS
-def setup_dns(node)
-  # Set up /etc/hosts
-  node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-    s.args = ["enp0s8", node.vm.hostname]
-  end
-  # Set up DNS resolution
-  node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-end
-
 # Runs provisioning steps that are required by masters and workers
 def provision_kubernetes_node(node)
   # Set up kernel parameters, modules and tunables
-  node.vm.provision "setup-kernel", :type => "shell", :path => "ubuntu/setup-kernel.sh"
+  node.vm.provision "setup-kernel", :type => "shell", :path => "fedora/setup-kernel.sh"
   # Set up ssh
-  node.vm.provision "setup-ssh", :type => "shell", :path => "ubuntu/ssh.sh"
+  node.vm.provision "setup-ssh", :type => "shell", :path => "fedora/ssh.sh"
   # Set up DNS
-  setup_dns node
+  node.vm.provision "setup-hosts", :type => "shell", :path => "fedora/setup-hosts.sh"
   # Install cert verification script
-  node.vm.provision "shell", inline: "ln -s /vagrant/ubuntu/cert_verify.sh /home/vagrant/cert_verify.sh"
+  node.vm.provision "shell", inline: "ln -s /fedora/cert_verify.sh /home/vagrant/cert_verify.sh"
 end
 
 # Define the number of master and worker nodes. You should not change this
-NUM_CONTROL_NODES = 2
+NUM_CONTROL_NODES = 3
 NUM_WORKER_NODE = 2
 
 # Host address start points
@@ -81,7 +71,7 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   # config.vm.box = "base"
-  config.vm.box = "ubuntu/jammy64"
+  config.vm.box = "bento/fedora-40"
   config.vm.boot_timeout = 900
 
   # Disable automatic box update checking. If you disable this, then
@@ -93,19 +83,21 @@ Vagrant.configure("2") do |config|
   (1..NUM_CONTROL_NODES).each do |i|
     config.vm.define "controlplane0#{i}" do |node|
       # Name shown in the GUI
-      node.vm.provider "virtualbox" do |vb|
-        vb.name = "kubernetes-ha-controlplane-#{i}"
-        vb.memory = RESOURCES["control"][i > 2 ? 2 : i]["ram"]
-        vb.cpus = RESOURCES["control"][i > 2 ? 2 : i]["cpu"]
+      node.vm.provider "libvirt" do |libvirt|
+        libvirt.default_prefix = "kubernetes-ha-"
+        libvirt.memory = RESOURCES["control"][i > 2 ? 2 : i]["ram"]
+        libvirt.cpus = RESOURCES["control"][i > 2 ? 2 : i]["cpu"]
+        libvirt.driver = "kvm"
+        libvirt.uri = 'qemu:///system'
       end
       node.vm.hostname = "controlplane0#{i}"
       node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
-      node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
+      node.vm.provision "setup-networking", :type => "shell", :path => "fedora/setup-networking.sh"
       provision_kubernetes_node node
       if i == 1
         # Install (opinionated) configs for vim and tmux on controlplane01. These used by the author for CKA exam.
-        node.vm.provision "file", source: "./ubuntu/tmux.conf", destination: "$HOME/.tmux.conf"
-        node.vm.provision "file", source: "./ubuntu/vimrc", destination: "$HOME/.vimrc"
+        node.vm.provision "file", source: "./fedora/tmux.conf", destination: "$HOME/.tmux.conf"
+        node.vm.provision "file", source: "./fedora/vimrc", destination: "$HOME/.vimrc"
         node.vm.provision "file", source: "../tools/approve-csr.sh", destination: "$HOME/approve-csr.sh"
       end
     end
@@ -113,30 +105,35 @@ Vagrant.configure("2") do |config|
 
   # Provision Load Balancer Node
   config.vm.define "loadbalancer" do |node|
-    node.vm.provider "virtualbox" do |vb|
-      vb.name = "kubernetes-ha-lb"
-      vb.memory = 512
-      vb.cpus = 1
+    node.vm.provider "libvirt" do |libvirt|
+      libvirt.default_prefix = "kubernetes-ha-"
+      libvirt.memory = 512
+      libvirt.cpus = 1
+      libvirt.driver = "kvm"
+      libvirt.uri = 'qemu:///system'
     end
     node.vm.hostname = "loadbalancer"
     node.vm.network :private_network, ip: IP_NW + "#{LB_IP_START}"
-    node.vm.network "forwarded_port", guest: 22, host: 2730
+    node.vm.provision "setup-networking", :type => "shell", :path => "fedora/setup-networking.sh"
     # Set up ssh
-    node.vm.provision "setup-ssh", :type => "shell", :path => "ubuntu/ssh.sh"
-    setup_dns node
+    node.vm.provision "setup-ssh", :type => "shell", :path => "fedora/ssh.sh"
+    node.vm.provision "setup-hosts", :type => "shell", :path => "fedora/setup-hosts.sh"
   end
 
   # Provision Worker Nodes
   (1..NUM_WORKER_NODE).each do |i|
     config.vm.define "node0#{i}" do |node|
-      node.vm.provider "virtualbox" do |vb|
-        vb.name = "kubernetes-ha-node-#{i}"
-        vb.memory = RESOURCES["worker"]["ram"]
-        vb.cpus = RESOURCES["worker"]["cpu"]
+      node.vm.provider "libvirt" do |libvirt|
+        libvirt.default_prefix = "kubernetes-ha-"
+        libvirt.memory = RESOURCES["worker"]["ram"]
+        libvirt.cpus = RESOURCES["worker"]["cpu"]
+        libvirt.driver = "kvm"
+        libvirt.uri = 'qemu:///system'
+
       end
       node.vm.hostname = "node0#{i}"
       node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
-      node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
+      node.vm.provision "setup-networking", :type => "shell", :path => "fedora/setup-networking.sh"
       provision_kubernetes_node node
     end
   end
