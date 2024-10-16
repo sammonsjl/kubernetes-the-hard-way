@@ -11,7 +11,7 @@ Generate SSH key pair on `controlplane01` node:
 [//]: # (host:controlplane01)
 
 ```bash
-ssh-keygen
+ssh-keygen -t rsa
 ```
 
 Leave all settings to default by pressing `ENTER` at any prompt.
@@ -76,7 +76,7 @@ We will be using `kubectl` early on to generate `kubeconfig` files for the contr
 ### Linux
 
 ```bash
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 ```
