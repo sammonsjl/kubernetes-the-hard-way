@@ -11,6 +11,7 @@ NC='\033[0m'
 PRIMARY_IP=$(ip addr show enp0s8 | grep "inet " | awk '{print $2}' | cut -d / -f 1)
 CONTROL01=$(dig +short controlplane01)
 CONTROL02=$(dig +short controlplane02)
+CONTROL03=$(dig +short controlplane03)
 NODE01=$(dig +short node01)
 NODE02=$(dig +short node02)
 LOADBALANCER=$(dig +short loadbalancer)

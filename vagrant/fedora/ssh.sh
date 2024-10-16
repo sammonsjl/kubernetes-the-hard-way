@@ -16,6 +16,6 @@ fi
 
 if [ "$(hostname)" = "controlplane01" ]
 then
-    sh -c 'sudo dnf install -y sshpass' &> /dev/null
+    sh -c 'sudo dnf install -y sshpass bind-utils openssl' &> /dev/null
 fi
 

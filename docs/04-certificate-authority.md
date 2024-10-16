@@ -21,6 +21,7 @@ Set up environment variables. Run the following:
 ```bash
 CONTROL01=$(dig +short controlplane01)
 CONTROL02=$(dig +short controlplane02)
+CONTROL03=$(dig +short controlplane03)
 LOADBALANCER=$(dig +short loadbalancer)
 ```
 
@@ -36,6 +37,7 @@ Check that the environment variables are set. Run the following:
 ```bash
 echo $CONTROL01
 echo $CONTROL02
+echo $CONTROL03
 echo $LOADBALANCER
 echo $SERVICE_CIDR
 echo $API_SERVICE
@@ -217,6 +219,7 @@ DNS.5 = kubernetes.default.svc.cluster.local
 IP.1 = ${API_SERVICE}
 IP.2 = ${CONTROL01}
 IP.3 = ${CONTROL02}
+IP.3 = ${CONTROL03}
 IP.4 = ${LOADBALANCER}
 IP.5 = 127.0.0.1
 EOF
@@ -301,6 +304,7 @@ subjectAltName = @alt_names
 [alt_names]
 IP.1 = ${CONTROL01}
 IP.2 = ${CONTROL02}
+IP.2 = ${CONTROL03}
 IP.3 = 127.0.0.1
 EOF
 ```
