@@ -1,6 +1,6 @@
 # Provisioning Compute Resources
 
-Note: You must have VirtualBox and Vagrant configured at this point.
+Note: You must have KVM and Vagrant configured at this point.
 
 Download this github repository and cd into the vagrant folder:
 
@@ -27,20 +27,21 @@ vagrant up
 
 This does the below:
 
-- Deploys 5 VMs - 2 controlplane, 2 worker and 1 loadbalancer with the name 'kubernetes-ha-* '
+- Deploys 6 VMs - 3 controlplane, 2 worker and 1 loadbalancer with the name 'kubernetes-ha-* '
     > This is the default settings. This can be changed at the top of the Vagrant file.
-    > If you choose to change these settings, please also update `vagrant/ubuntu/vagrant/setup-hosts.sh`
+    > If you choose to change these settings, please also update `vagrant/fedora/vagrant/setup-hosts.sh`
     > to add the additional hosts to the `/etc/hosts` default before running `vagrant up`.
 
-- Set's IP addresses in the range `192.168.56.x`
+- Set's IP addresses in the range `192.168.100.x`
 
     | VM            |  VM Name               | Purpose       | IP            | Forwarded Port   | RAM  |
     | ------------  | ---------------------- |:-------------:| -------------:| ----------------:|-----:|
-    | controlplane01      | kubernetes-ha-controlplane01 | Master        | 192.168.56.11 |     2711         | 2048 |
-    | controlplane02      | kubernetes-ha-controlplane02 | Master        | 192.168.56.12 |     2712         | 1024 |
-    | node01      | kubernetes-ha-node01 | Worker        | 192.168.56.21 |     2721         | 512  |
-    | node02      | kubernetes-ha-node02 | Worker        | 192.168.56.22 |     2722         | 1024 |
-    | loadbalancer  | kubernetes-ha-lb       | LoadBalancer  | 192.168.56.30 |     2730         | 1024 |
+    | controlplane01      | kubernetes-ha-controlplane01 | Master        | 192.168.100.11 |     2711         | 2048 |
+    | controlplane02      | kubernetes-ha-controlplane02 | Master        | 192.168.100.12 |     2712         | 1024 |
+    | controlplane03      | kubernetes-ha-controlplane03 | Master        | 192.168.100.13 |     2713         | 1024 |
+    | node01      | kubernetes-ha-node01 | Worker        | 192.168.100.21 |     2721         | 512  |
+    | node02      | kubernetes-ha-node02 | Worker        | 192.168.100.22 |     2722         | 1024 |
+    | loadbalancer  | kubernetes-ha-lb       | LoadBalancer  | 192.168.100.30 |     2730         | 1024 |
 
     > These are the default settings. These can be changed in the Vagrant file
 
@@ -68,7 +69,7 @@ Use the above IP addresses. Username and password-based SSH is disabled by defau
 
 Vagrant generates a private key for each of these VMs. It is placed under the `.vagrant` folder (in the directory you ran the `vagrant up` command from) at the below path for each VM:
 
-- **Private key path**: `.vagrant/machines/\<machine name\>/virtualbox/private_key`
+- **Private key path**: `.vagrant/machines/\<machine name\>/libvirt/private_key`
 - **Username/password**: `vagrant/vagrant`
 
 
@@ -92,23 +93,6 @@ vagrant destroy \<vm\>
 Then re-provision. Only the missing VMs will be re-provisioned
 
 ```bash
-vagrant up
-```
-
-
-Sometimes the delete does not delete the folder created for the VM and throws an error similar to this:
-
-VirtualBox error:
-
-    VBoxManage.exe: error: Could not rename the directory 'D:\VirtualBox VMs\ubuntu-bionic-18.04-cloudimg-20190122_1552891552601_76806' to 'D:\VirtualBox VMs\kubernetes-ha-node02' to save the settings file (VERR_ALREADY_EXISTS)
-    VBoxManage.exe: error: Details: code E_FAIL (0x80004005), component SessionMachine, interface IMachine, callee IUnknown
-    VBoxManage.exe: error: Context: "SaveSettings()" at line 3105 of file VBoxManageModifyVM.cpp
-
-In such cases delete the VM, then delete the VM folder and then re-provision, e.g.
-
-```bash
-vagrant destroy node02
-rmdir "\<path-to-vm-folder\>\kubernetes-ha-node02
 vagrant up
 ```
 
@@ -137,5 +121,5 @@ To power on again:
 vagrant up
 ```
 
-Next: [Client tools](../../docs/03-client-tools.md)<br>
+Next: [Client tools](03-client-tools.md)<br>
 Prev: [Prerequisites](01-prerequisites.md)

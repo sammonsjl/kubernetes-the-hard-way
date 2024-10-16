@@ -3,7 +3,7 @@
 
 # Define how much memory your computer has in GB (e.g. 8, 16)
 # Larger nodes will be created if you have more.
-RAM_SIZE = 32
+RAM_SIZE = 16
 
 # Define how mnay CPU cores you have.
 # More powerful workers will be created if you have more
