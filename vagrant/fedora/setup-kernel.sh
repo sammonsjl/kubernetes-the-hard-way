@@ -4,7 +4,7 @@
 set -e
 
 # Add br_netfilter kernel module
-cat <<EOF >> /etc/modules
+cat <<EOF >> /etc/modules-load.d/kubernetes.conf
 ip_vs
 ip_vs_rr
 ip_vs_wrr
