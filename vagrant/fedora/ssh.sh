@@ -13,9 +13,5 @@ then
     chown vagrant:vagrant /home/vagrant/.ssh
 fi
 
-
-if [ "$(hostname)" = "controlplane01" ]
-then
-    sh -c 'sudo dnf install -y sshpass bind-utils openssl' &> /dev/null
-fi
+sh -c 'sudo dnf install -y sshpass bind-utils openssl' &> /dev/null
 

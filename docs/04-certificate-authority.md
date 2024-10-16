@@ -397,7 +397,7 @@ Copy the appropriate certificates and private keys to each instance:
 
 ```bash
 {
-for instance in controlplane01 controlplane02; do
+for instance in controlplane01 controlplane02 controlplane03; do
   scp -o StrictHostKeyChecking=no ca.crt ca.key kube-apiserver.key kube-apiserver.crt \
     apiserver-kubelet-client.crt apiserver-kubelet-client.key \
     service-account.key service-account.crt \
