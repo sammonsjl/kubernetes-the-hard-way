@@ -17,10 +17,10 @@ echo "PRIMARY_IP=${PRIMARY_IP}" >> /etc/environment
 # Export architecture as environment variable to download correct versions of software
 echo "ARCH=amd64"  | sudo tee -a /etc/environment > /dev/null
 
-# Create/Update /etc/hosts about other hosts
-echo '127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4' > /etc/hosts
+# Create /etc/hosts about other hosts
 
-cat >> /etc/hosts <<EOF
+cat > /etc/hosts <<EOF
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ${NETWORK}.11  controlplane01
 ${NETWORK}.12  controlplane02
 ${NETWORK}.13  controlplane03
