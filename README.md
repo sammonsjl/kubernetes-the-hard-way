@@ -39,4 +39,4 @@ We will be building the following:
 
 ## Getting Started
 
-Start [here](./kvm/docs/01-prerequisites.md) to deploy KVM and Vagrant.
+Start [here](./docs/01-prerequisites.md) to deploy KVM and Vagrant.

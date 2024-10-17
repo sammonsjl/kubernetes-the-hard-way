@@ -46,9 +46,9 @@ echo $API_SERVICE
 The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ. The first 3 addresses will also be different for Apple Silicon on Multipass (likely 192.168.64.x).
 
 ```
-192.168.56.11
-192.168.56.12
-192.168.56.30
+192.168.100.11
+192.168.100.12
+192.168.100.30
 10.96.0.0/24
 10.96.0.1
 ```
