@@ -470,9 +470,9 @@ SUBJ_APIKC="Subject:CN=kube-apiserver-kubelet-client,O=system:masters"
 case $choice in
 
   1)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
@@ -495,9 +495,9 @@ case $choice in
     ;;
 
   2)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
@@ -512,9 +512,9 @@ case $choice in
     ;;
 
   3)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
