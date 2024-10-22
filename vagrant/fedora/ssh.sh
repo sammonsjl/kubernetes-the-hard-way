@@ -13,5 +13,5 @@ then
     chown vagrant:vagrant /home/vagrant/.ssh
 fi
 
-sh -c 'sudo dnf install -y sshpass bind-utils openssl' &> /dev/null
+sh -c 'sudo dnf install -y sshpass bind-utils openssl tmux' &> /dev/null
 

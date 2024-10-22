@@ -11,11 +11,11 @@ PRIMARY_IP="$(ip -4 addr show | grep "inet" | grep -E -v '(dynamic|127\.0\.0)' |
 NETWORK=$(echo $PRIMARY_IP | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s", $1, $2, $3) }')
 #sed -e "s/^.*${HOSTNAME}.*/${PRIMARY_IP} ${HOSTNAME} ${HOSTNAME}.local/" -i /etc/hosts
 
-# Export PRIMARY IP as an environment variable
-echo "PRIMARY_IP=${PRIMARY_IP}" >> /etc/environment
+cat >> /etc/profile <<EOF
+export PRIMARY_IP=${PRIMARY_IP}
+export ARCH=amd64
+EOF
 
-# Export architecture as environment variable to download correct versions of software
-echo "ARCH=amd64"  | sudo tee -a /etc/environment > /dev/null
 
 # Create /etc/hosts about other hosts
 

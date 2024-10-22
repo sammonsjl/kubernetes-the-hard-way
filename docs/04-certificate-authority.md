@@ -219,9 +219,9 @@ DNS.5 = kubernetes.default.svc.cluster.local
 IP.1 = ${API_SERVICE}
 IP.2 = ${CONTROL01}
 IP.3 = ${CONTROL02}
-IP.3 = ${CONTROL03}
-IP.4 = ${LOADBALANCER}
-IP.5 = 127.0.0.1
+IP.4 = ${CONTROL03}
+IP.5 = ${LOADBALANCER}
+IP.6 = 127.0.0.1
 EOF
 ```
 
@@ -297,15 +297,17 @@ cat > openssl-etcd.cnf <<EOF
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
 [req_distinguished_name]
-[ v3_req ]
+[v3_req]
 basicConstraints = CA:FALSE
+extendedKeyUsage = serverAuth, clientAuth
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
 IP.1 = ${CONTROL01}
 IP.2 = ${CONTROL02}
-IP.2 = ${CONTROL03}
-IP.3 = 127.0.0.1
+IP.3 = ${CONTROL03}
+IP.4 = 127.0.0.1
+DNS.1 = localhost
 EOF
 ```
 
@@ -316,7 +318,7 @@ Generates certs for ETCD
   openssl genrsa -out etcd-server.key 2048
 
   openssl req -new -key etcd-server.key \
-    -subj "/CN=etcd-server/O=Kubernetes" -out etcd-server.csr -config openssl-etcd.cnf
+    -out etcd-server.csr -config openssl-etcd.cnf
 
   openssl x509 -req -in etcd-server.csr \
     -CA ca.crt -CAkey ca.key -CAcreateserial -out etcd-server.crt -extensions v3_req -extfile openssl-etcd.cnf -days 1000
