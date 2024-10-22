@@ -1,361 +1,64 @@
 # Provisioning a CA and Generating TLS Certificates
 
-In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using the popular openssl tool, then use it to bootstrap a Certificate Authority, and generate TLS certificates for the following components: etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, and kube-proxy.
-
-# Where to do these?
-
-You can do these on any machine with `openssl` on it. But you should be able to copy the generated files to the provisioned VMs. Or just do these from one of the controlplane nodes.
-
-In our case we do the following steps on the `controlplane01` node, as we have set it up to be the administrative client.
-
-[//]: # (host:controlplane01)
+In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using openssl to bootstrap a Certificate Authority, and generate TLS certificates for the following components: kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, and kube-proxy. The commands in this section should be run from the `jumpbox`.
 
 ## Certificate Authority
 
-In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates.
+In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates for the other Kubernetes components. Setting up CA and generating certificates using `openssl` can be time-consuming, especially when doing it for the first time. To streamline this lab, I've included an openssl configuration file `ca.conf`, which defines all the details needed to generate certificates for each Kubernetes component. 
 
-Query IPs of hosts we will insert as certificate subject alternative names (SANs), which will be read from `/etc/hosts`.
-
-Set up environment variables. Run the following:
+Take a moment to review the `ca.conf` configuration file:
 
 ```bash
-CONTROL01=$(dig +short controlplane01)
-CONTROL02=$(dig +short controlplane02)
-CONTROL03=$(dig +short controlplane03)
-LOADBALANCER=$(dig +short loadbalancer)
+cat ca.conf
 ```
 
-Compute cluster internal API server service address, which is always `.1` in the service CIDR range. This is also required as a SAN in the API server certificate. Run the following:
+You don't need to understand everything in the `ca.conf` file to complete this tutorial, but you should consider it a starting point for learning `openssl` and the configuration that goes into managing certificates at a high level.
 
-```bash
-SERVICE_CIDR=10.96.0.0/24
-API_SERVICE=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.1", $1, $2, $3) }')
-```
+Every certificate authority starts with a private key and root certificate. In this section we are going to create a self-signed certificate authority, and while that's all we need for this tutorial, this shouldn't be considered something you would do in a real-world production level environment. 
 
-Check that the environment variables are set. Run the following:
-
-```bash
-echo $CONTROL01
-echo $CONTROL02
-echo $CONTROL03
-echo $LOADBALANCER
-echo $SERVICE_CIDR
-echo $API_SERVICE
-```
-
-The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ. The first 3 addresses will also be different for Apple Silicon on Multipass (likely 192.168.64.x).
-
-```
-192.168.100.11
-192.168.100.12
-192.168.100.30
-10.96.0.0/24
-10.96.0.1
-```
-
-Create a CA certificate by first creating a private key, then using it to create a certificate signing request, then self-signing the new certificate with our key.
+Generate the CA configuration file, certificate, and private key:
 
 ```bash
 {
-  # Create private key for CA
-  openssl genrsa -out ca.key 2048
-
-  # Create CSR using the private key
-  openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA/O=Kubernetes" -out ca.csr
-
-  # Self sign the csr using its own private key
-  openssl x509 -req -in ca.csr -signkey ca.key -CAcreateserial -out ca.crt -days 1000
+  openssl req -x509 -noenc -newkey rsa:4096 \
+    -keyout ca.key -out ca.crt -days 36500 -config ca.conf
 }
 ```
 
 Results:
 
+```txt
+ca.crt ca.key
 ```
-ca.crt
-ca.key
-```
 
-Reference : https://kubernetes.io/docs/tasks/administer-cluster/certificates/#openssl
-
-The `ca.crt` is the Kubernetes Certificate Authority certificate and `ca.key` is the Kubernetes Certificate Authority private key.
-You will use the `ca.crt` file in many places, so it will be copied to many places.
-
-The `ca.key` is used by the CA for signing certificates. And it should be securely stored. In this case our controlplane node(s) is our CA server as well, so we will store it on controlplane node(s). There is no need to copy this file elsewhere.
-
-## Client and Server Certificates
+## Create Client and Server Certificates
 
 In this section you will generate client and server certificates for each Kubernetes component and a client certificate for the Kubernetes `admin` user.
 
-To better understand the role of client certificates with respect to users and groups, see [this informative video](https://youtu.be/I-iVrIWfMl8). Note that all the kubenetes services below are themselves cluster users.
-
-### The Admin Client Certificate
-
-Generate the `admin` client certificate and private key:
+Generate the certificates and private keys:
 
 ```bash
-{
-  # Generate private key for admin user
-  openssl genrsa -out admin.key 2048
-
-  # Generate CSR for admin user. Note the OU.
-  openssl req -new -key admin.key -subj "/CN=admin/O=system:masters" -out admin.csr
-
-  # Sign certificate for admin user using CA servers private key
-  openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out admin.crt -days 1000
-}
+certs=(
+  "admin" "node-0" "node-1"
+  "kube-proxy" "kube-scheduler"
+  "kube-controller-manager"
+  "apiserver-kubelet-client"
+  "kube-apiserver"
+  "etcd-server"
+  "service-account"
+)
 ```
-
-Note that the admin user is part of the **system:masters** group. This is how we are able to perform any administrative operations on Kubernetes cluster using `kubectl` utility.
-
-Results:
-
-```
-admin.key
-admin.crt
-```
-
-The `admin.crt` and `admin.key` file gives you administrative access. We will configure these to be used with the `kubectl` tool to perform administrative functions on Kubernetes.
-
-### The Kubelet Client Certificates
-
-We are going to skip certificate configuration for Worker Nodes for now. We will deal with them when we configure the workers.
-For now let's just focus on the control plane components.
-
-### The Controller Manager Client Certificate
-
-Generate the `kube-controller-manager` client certificate and private key:
 
 ```bash
-{
-  openssl genrsa -out kube-controller-manager.key 2048
+for i in ${certs[*]}; do
+  openssl req -noenc -newkey rsa:4096 -keyout ${i}.key -out ${i}.csr -config ca.conf -section ${i}
 
-  openssl req -new -key kube-controller-manager.key \
-    -subj "/CN=system:kube-controller-manager/O=system:kube-controller-manager" -out kube-controller-manager.csr
-
-  openssl x509 -req -in kube-controller-manager.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-controller-manager.crt -days 1000
-}
+  openssl x509 -req -days 36500 -in ${i}.csr -CA ca.crt -CAkey ca.key \
+     -CAcreateserial -out ${i}.crt -copy_extensions copyall
+done
 ```
 
-Results:
-
-```
-kube-controller-manager.key
-kube-controller-manager.crt
-```
-
-
-### The Kube Proxy Client Certificate
-
-Generate the `kube-proxy` client certificate and private key:
-
-
-```bash
-{
-  openssl genrsa -out kube-proxy.key 2048
-
-  openssl req -new -key kube-proxy.key \
-    -subj "/CN=system:kube-proxy/O=system:node-proxier" -out kube-proxy.csr
-
-  openssl x509 -req -in kube-proxy.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-proxy.crt -days 1000
-}
-```
-
-Results:
-
-```
-kube-proxy.key
-kube-proxy.crt
-```
-
-### The Scheduler Client Certificate
-
-Generate the `kube-scheduler` client certificate and private key:
-
-
-
-```bash
-{
-  openssl genrsa -out kube-scheduler.key 2048
-
-  openssl req -new -key kube-scheduler.key \
-    -subj "/CN=system:kube-scheduler/O=system:kube-scheduler" -out kube-scheduler.csr
-
-  openssl x509 -req -in kube-scheduler.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-scheduler.crt -days 1000
-}
-```
-
-Results:
-
-```
-kube-scheduler.key
-kube-scheduler.crt
-```
-
-### The Kubernetes API Server Certificate
-
-The kube-apiserver certificate requires all names that various components may reach it to be part of the alternate names. These include the different DNS names, and IP addresses such as the controlplane servers IP address, the load balancers IP address, the kube-api service IP address etc. These provide an *identity* for the certificate, which is key in the SSL process for a server to prove who it is.
-
-The `openssl` command cannot take alternate names as command line parameter. So we must create a `conf` file for it:
-
-```bash
-cat > openssl.cnf <<EOF
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[v3_req]
-basicConstraints = critical, CA:FALSE
-keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = kubernetes
-DNS.2 = kubernetes.default
-DNS.3 = kubernetes.default.svc
-DNS.4 = kubernetes.default.svc.cluster
-DNS.5 = kubernetes.default.svc.cluster.local
-IP.1 = ${API_SERVICE}
-IP.2 = ${CONTROL01}
-IP.3 = ${CONTROL02}
-IP.4 = ${CONTROL03}
-IP.5 = ${LOADBALANCER}
-IP.6 = 127.0.0.1
-EOF
-```
-
-Generate certs for kube-apiserver
-
-```bash
-{
-  openssl genrsa -out kube-apiserver.key 2048
-
-  openssl req -new -key kube-apiserver.key \
-    -subj "/CN=kube-apiserver/O=Kubernetes" -out kube-apiserver.csr -config openssl.cnf
-
-  openssl x509 -req -in kube-apiserver.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-apiserver.crt -extensions v3_req -extfile openssl.cnf -days 1000
-}
-```
-
-Results:
-
-```
-kube-apiserver.crt
-kube-apiserver.key
-```
-
-### The API Server Kubelet Client Certificate
-
-This certificate is for the API server to authenticate with the kubelets when it requests information from them
-
-```bash
-cat > openssl-kubelet.cnf <<EOF
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[v3_req]
-basicConstraints = critical, CA:FALSE
-keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage = clientAuth
-EOF
-```
-
-Generate certs for kubelet authentication
-
-```bash
-{
-  openssl genrsa -out apiserver-kubelet-client.key 2048
-
-  openssl req -new -key apiserver-kubelet-client.key \
-    -subj "/CN=kube-apiserver-kubelet-client/O=system:masters" -out apiserver-kubelet-client.csr -config openssl-kubelet.cnf
-
-  openssl x509 -req -in apiserver-kubelet-client.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out apiserver-kubelet-client.crt -extensions v3_req -extfile openssl-kubelet.cnf -days 1000
-}
-```
-
-Results:
-
-```
-apiserver-kubelet-client.crt
-apiserver-kubelet-client.key
-```
-
-
-### The ETCD Server Certificate
-
-Similarly ETCD server certificate must have addresses of all the servers part of the ETCD cluster. Similarly, this is a server certificate, which is again all about proving identity.
-
-The `openssl` command cannot take alternate names as command line parameter. So we must create a `conf` file for it:
-
-```bash
-cat > openssl-etcd.cnf <<EOF
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[v3_req]
-basicConstraints = CA:FALSE
-extendedKeyUsage = serverAuth, clientAuth
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName = @alt_names
-[alt_names]
-IP.1 = ${CONTROL01}
-IP.2 = ${CONTROL02}
-IP.3 = ${CONTROL03}
-IP.4 = 127.0.0.1
-DNS.1 = localhost
-EOF
-```
-
-Generates certs for ETCD
-
-```bash
-{
-  openssl genrsa -out etcd-server.key 2048
-
-  openssl req -new -key etcd-server.key \
-    -out etcd-server.csr -config openssl-etcd.cnf
-
-  openssl x509 -req -in etcd-server.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out etcd-server.crt -extensions v3_req -extfile openssl-etcd.cnf -days 1000
-}
-```
-
-Results:
-
-```
-etcd-server.key
-etcd-server.crt
-```
-
-## The Service Account Key Pair
-
-The Kubernetes Controller Manager leverages a key pair to generate and sign service account tokens as described in the [managing service accounts](https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/) documentation.
-
-Generate the `service-account` certificate and private key:
-
-```bash
-{
-  openssl genrsa -out service-account.key 2048
-
-  openssl req -new -key service-account.key \
-    -subj "/CN=service-accounts/O=Kubernetes" -out service-account.csr
-
-  openssl x509 -req -in service-account.csr \
-    -CA ca.crt -CAkey ca.key -CAcreateserial -out service-account.crt -days 1000
-}
-```
-
-Results:
-
-```
-service-account.key
-service-account.crt
-```
+The results of running the above command will generate a private key, certificate request, and signed SSL certificate for each of the Kubernetes components. You can list the generated files with the following command:
 
 ## Verify the PKI
 
