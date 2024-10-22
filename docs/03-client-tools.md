@@ -92,8 +92,8 @@ kubectl version --client
 output will be similar to this, although versions may be newer:
 
 ```
-Client Version: v1.29.0
-Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Client Version: v1.31.1
+Kustomize Version: v5.4.2
 ```
 
 Next: [Certificate Authority](04-certificate-authority.md)<br>
