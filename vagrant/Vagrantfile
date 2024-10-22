@@ -48,6 +48,8 @@ def provision_kubernetes_node(node)
   node.vm.provision "setup-hosts", :type => "shell", :path => "fedora/setup-hosts.sh"
   # Install cert verification script
   node.vm.provision "shell", inline: "chmod +x /vagrant/fedora/cert_verify.sh && ln -s /vagrant/fedora/cert_verify.sh /home/vagrant/cert_verify.sh"
+  # Provide ca.conf file
+  node.vm.provision "shell", inline: "ln -s /vagrant/fedora/ca.conf /home/vagrant/ca.conf"
 end
 
 # Define the number of master and worker nodes. You should not change this

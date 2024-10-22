@@ -1,6 +1,14 @@
 # Provisioning a CA and Generating TLS Certificates
 
-In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using openssl to bootstrap a Certificate Authority, and generate TLS certificates for the following components: kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, and kube-proxy. The commands in this section should be run from the `jumpbox`.
+In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using openssl to bootstrap a Certificate Authority, and generate TLS certificates for the following components: kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, and kube-proxy. 
+
+# Where to do these?
+
+You can do these on any machine with `openssl` on it. But you should be able to copy the generated files to the provisioned VMs. Or just do these from one of the controlplane nodes.
+
+In our case we do the following steps on the `controlplane01` node, as we have set it up to be the administrative client.
+
+[//]: # (host:controlplane01)
 
 ## Certificate Authority
 
