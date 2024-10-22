@@ -34,7 +34,7 @@ If you do change any of these, **please consider that a personal preference and 
 
 #### Virtual Machine Network
 
-The network used by the VirtualBox virtual machines is `192.168.100.0/24`.
+The network used by the KVM virtual machines is `192.168.100.0/24`.
 
 To change this, edit the [Vagrantfile](../../vagrant/Vagrantfile) in your cloned copy (do not edit directly in github), and set the new value for the network prefix at line 9. This should not overlap any of the other network settings.
 
