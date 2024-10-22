@@ -134,9 +134,9 @@ sudo ETCDCTL_API=3 etcdctl member list \
 Output will be similar to this
 
 ```
-45bf9ccad8d8900a, started, controlplane02, https://192.168.56.12:2380, https://192.168.56.12:2379
-45bf9ccad8d8900a, started, controlplane02, https://192.168.56.12:2380, https://192.168.56.12:2379
-54a5796a6803f252, started, controlplane01, https://192.168.56.11:2380, https://192.168.56.11:2379
+1a82afa2247e7562, started, controlplane02, https://192.168.100.12:2380, https://192.168.100.12:2379, false
+b9a27230d536d1e8, started, controlplane01, https://192.168.100.11:2380, https://192.168.100.11:2379, false
+cb6055e972a4f0d1, started, controlplane03, https://192.168.100.13:2380, https://192.168.100.13:2379, false
 ```
 
 Reference: https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#starting-etcd-clusters
