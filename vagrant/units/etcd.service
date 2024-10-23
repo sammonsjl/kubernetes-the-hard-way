@@ -1,0 +1,28 @@
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+ExecStart=/usr/local/bin/etcd \
+  --name controlplane01 \
+  --cert-file=/etc/etcd/etcd-server.crt \
+  --key-file=/etc/etcd/etcd-server.key \
+  --peer-cert-file=/etc/etcd/etcd-server.crt \
+  --peer-key-file=/etc/etcd/etcd-server.key \
+  --trusted-ca-file=/etc/etcd/ca.crt \
+  --peer-trusted-ca-file=/etc/etcd/ca.crt \
+  --peer-client-cert-auth \
+  --client-cert-auth \
+  --initial-advertise-peer-urls https://192.168.100.11:2380 \
+  --listen-peer-urls https://192.168.100.11:2380 \
+  --listen-client-urls https://192.168.100.11:2379,https://127.0.0.1:2379 \
+  --advertise-client-urls https://192.168.100.11:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster controlplane01=https://192.168.100.11:2380,controlplane02=https://192.168.100.12:2380,controlplane03=https://192.168.100.13:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
