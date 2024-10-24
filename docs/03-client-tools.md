@@ -83,7 +83,7 @@ cat downloads.txt
 Download the binaries listed in the `downloads.txt` file using the `wget` command:
 
 ```bash
-wget -q --show-progress \
+wget -q --progress=bar:force \
   --https-only \
   --timestamping \
   -P downloads \
@@ -97,18 +97,18 @@ ls -loh downloads
 ```
 
 ```text
-total 584M
--rw-r--r-- 1 root  41M May  9 13:35 cni-plugins-linux-arm64-v1.3.0.tgz
--rw-r--r-- 1 root  34M Oct 26 15:21 containerd-1.7.8-linux-arm64.tar.gz
--rw-r--r-- 1 root  22M Aug 14 00:19 crictl-v1.28.0-linux-arm.tar.gz
--rw-r--r-- 1 root  15M Jul 11 02:30 etcd-v3.4.27-linux-arm64.tar.gz
--rw-r--r-- 1 root 111M Oct 18 07:34 kube-apiserver
--rw-r--r-- 1 root 107M Oct 18 07:34 kube-controller-manager
--rw-r--r-- 1 root  51M Oct 18 07:34 kube-proxy
--rw-r--r-- 1 root  52M Oct 18 07:34 kube-scheduler
--rw-r--r-- 1 root  46M Oct 18 07:34 kubectl
--rw-r--r-- 1 root 101M Oct 18 07:34 kubelet
--rw-r--r-- 1 root 9.6M Aug 10 18:57 runc.arm64
+total 561M
+-rw-r--r--. 1 vagrant 51M Oct 15 09:37 cni-plugins-linux-amd64-v1.6.0.tgz
+-rw-r--r--. 1 vagrant 46M Oct 14 20:47 containerd-1.7.23-linux-amd64.tar.gz
+-rw-r--r--. 1 vagrant 18M Aug 13 10:48 crictl-v1.31.1-darwin-amd64.tar.gz
+-rw-r--r--. 1 vagrant 20M Sep 10 18:31 etcd-v3.5.16-linux-amd64.tar.gz
+-rw-r--r--. 1 vagrant 87M Oct 23 04:41 kube-apiserver
+-rw-r--r--. 1 vagrant 81M Oct 23 04:41 kube-controller-manager
+-rw-r--r--. 1 vagrant 54M Oct 23 04:41 kubectl
+-rw-r--r--. 1 vagrant 74M Oct 23 04:41 kubelet
+-rw-r--r--. 1 vagrant 62M Oct 23 04:41 kube-proxy
+-rw-r--r--. 1 vagrant 61M Oct 23 04:41 kube-scheduler
+-rw-r--r--. 1 vagrant 11M Oct 21 22:31 runc.amd64
 ```
 
 ## Install kubectl
@@ -119,12 +119,9 @@ Reference: [https://kubernetes.io/docs/tasks/tools/install-kubectl/](https://kub
 
 We will be using `kubectl` early on to generate `kubeconfig` files for the controlplane components.
 
-### Linux
-
 ```bash
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
-chmod +x kubectl
-sudo mv kubectl /usr/local/bin/
+sudo cp downloads/kubectl /usr/local/bin/
+sudo chmod +x /usr/local/bin/kubectl
 ```
 
 ### Verification
@@ -138,7 +135,7 @@ kubectl version --client
 output will be similar to this, although versions may be newer:
 
 ```
-Client Version: v1.31.1
+Client Version: v1.31.2
 Kustomize Version: v5.4.2
 ```
 
