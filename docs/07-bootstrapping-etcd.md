@@ -25,7 +25,7 @@ Extract and install the `etcd` server and the `etcdctl` command line utility:
 
 ```bash
 {
-  tar -xvf etcd-v3.5.16-linux-amd64.tar.gz
+  tar -xvf downloads/etcd-v3.5.16-linux-amd64.tar.gz
   sudo mv etcd-v3.5.16-linux-amd64/etcd* /usr/local/bin/
 }
 ```
@@ -51,50 +51,22 @@ The instance internal IP address will be used to serve client requests and commu
 Retrieve the internal IP address of the controlplane(etcd) nodes, and also that of controlplane01, controlplane02 and controlplane03 for the etcd cluster member list
 
 ```bash
-CONTROL01=$(dig +short controlplane01)
-CONTROL02=$(dig +short controlplane02)
-CONTROL03=$(dig +short controlplane03)
+export CONTROL01=$(dig +short controlplane01)
+export CONTROL02=$(dig +short controlplane02)
+export CONTROL03=$(dig +short controlplane03)
 ```
 
 Each etcd member must have a unique name within an etcd cluster. Set the etcd name to match the hostname of the current compute instance:
 
 ```bash
-ETCD_NAME=$(hostname -s)
+export ETCD_NAME=$(hostname -s)
 ```
 
-Create the `etcd.service` systemd unit file:
+Copy the `etcd.service` systemd unit file:
 
 ```bash
-cat <<EOF | sudo tee /etc/systemd/system/etcd.service
-[Unit]
-Description=etcd
-Documentation=https://github.com/coreos
-
-[Service]
-ExecStart=/usr/local/bin/etcd \\
-  --name ${ETCD_NAME} \\
-  --cert-file=/etc/etcd/etcd-server.crt \\
-  --key-file=/etc/etcd/etcd-server.key \\
-  --peer-cert-file=/etc/etcd/etcd-server.crt \\
-  --peer-key-file=/etc/etcd/etcd-server.key \\
-  --trusted-ca-file=/etc/etcd/ca.crt \\
-  --peer-trusted-ca-file=/etc/etcd/ca.crt \\
-  --peer-client-cert-auth \\
-  --client-cert-auth \\
-  --initial-advertise-peer-urls https://${PRIMARY_IP}:2380 \\
-  --listen-peer-urls https://${PRIMARY_IP}:2380 \\
-  --listen-client-urls https://${PRIMARY_IP}:2379,https://127.0.0.1:2379 \\
-  --advertise-client-urls https://${PRIMARY_IP}:2379 \\
-  --initial-cluster-token etcd-cluster-0 \\
-  --initial-cluster controlplane01=https://${CONTROL01}:2380,controlplane02=https://${CONTROL02}:2380,controlplane03=https://${CONTROL03}:2380 \\
-  --initial-cluster-state new \\
-  --data-dir=/var/lib/etcd
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
+envsubst < units/etcd.service \
+| sudo tee /etc/systemd/system/etcd.service
 ```
 
 ### Start the etcd Server
