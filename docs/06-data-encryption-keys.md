@@ -1,17 +1,15 @@
 # Generating the Data Encryption Config and Key
 
-Kubernetes stores a variety of data including cluster state, application configurations, and secrets. Kubernetes supports the ability to [encrypt](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data) cluster data at rest, that is, the data stored within `etcd`.
+Kubernetes stores a variety of data including cluster state, application configurations, and secrets. Kubernetes supports the ability to [encrypt](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data) cluster data at rest.
 
 In this lab you will generate an encryption key and an [encryption config](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#understanding-the-encryption-at-rest-configuration) suitable for encrypting Kubernetes Secrets.
 
 ## The Encryption Key
 
-[//]: # (host:controlplane01)
-
-Generate an encryption key. This is simply 32 bytes of random data, which we base64 encode:
+Generate an encryption key:
 
 ```bash
-ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+export ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 ```
 
 ## The Encryption Config File
@@ -19,19 +17,8 @@ ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 Create the `encryption-config.yaml` encryption config file:
 
 ```bash
-cat > encryption-config.yaml <<EOF
-kind: EncryptionConfig
-apiVersion: v1
-resources:
-  - resources:
-      - secrets
-    providers:
-      - aescbc:
-          keys:
-            - name: key1
-              secret: ${ENCRYPTION_KEY}
-      - identity: {}
-EOF
+envsubst < configs/encryption-config.yaml \
+  > encryption-config.yaml
 ```
 
 Copy the `encryption-config.yaml` encryption config file to each controller instance:

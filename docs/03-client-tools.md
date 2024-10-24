@@ -66,7 +66,7 @@ exit
 
 ### Download Binaries
 
-In this section you will download the binaries for the various Kubernetes components. The binaries will be stored in the `downloads` directory on the `jumpbox`, which will reduce the amount of internet bandwidth required to complete this tutorial as we avoid downloading the binaries multiple times for each machine in our Kubernetes cluster.
+In this section you will download the binaries for the various Kubernetes components. The binaries will be stored in the `downloads` directory on the `controlplane01` node, which will reduce the amount of internet bandwidth required to complete this tutorial as we avoid downloading the binaries multiple times for each machine in our Kubernetes cluster.
 
 From the `kubernetes-the-hard-way` directory create a `downloads` directory using the `mkdir` command:
 
@@ -109,6 +109,14 @@ total 561M
 -rw-r--r--. 1 vagrant 62M Oct 23 04:41 kube-proxy
 -rw-r--r--. 1 vagrant 61M Oct 23 04:41 kube-scheduler
 -rw-r--r--. 1 vagrant 11M Oct 21 22:31 runc.amd64
+```
+
+## Copy Binaries to every node
+
+```bash
+for instance in controlplane02 controlplane03 node01 node02 ; do
+  scp downloads/* ${instance}:~/downloads/
+done
 ```
 
 ## Install kubectl

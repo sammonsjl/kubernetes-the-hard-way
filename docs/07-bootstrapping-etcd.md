@@ -14,25 +14,19 @@ The commands in this lab must be run on each controller instance: `controlplane0
 
 ## Bootstrapping an etcd Cluster Member
 
-### Download and Install the etcd Binaries
+### Install the etcd Binaries
 
 Download the official etcd release binaries from the [etcd](https://github.com/etcd-io/etcd) GitHub project:
 
 [//]: # (host:controlplane01-controlplane02-controlplane03)
 
 
-```bash
-ETCD_VERSION="v3.5.16"
-wget -q --https-only --timestamping \
-  "https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-${ARCH}.tar.gz"
-```
-
 Extract and install the `etcd` server and the `etcdctl` command line utility:
 
 ```bash
 {
-  tar -xvf etcd-${ETCD_VERSION}-linux-${ARCH}.tar.gz
-  sudo mv etcd-${ETCD_VERSION}-linux-${ARCH}/etcd* /usr/local/bin/
+  tar -xvf etcd-v3.5.16-linux-amd64.tar.gz
+  sudo mv etcd-v3.5.16-linux-amd64/etcd* /usr/local/bin/
 }
 ```
 
