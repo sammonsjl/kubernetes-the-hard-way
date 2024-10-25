@@ -65,7 +65,7 @@ export ETCD_NAME=$(hostname -s)
 Copy the `etcd.service` systemd unit file:
 
 ```bash
-envsubst < units/etcd.service \
+envsubst < templates/etcd.service.template \
 | sudo tee /etc/systemd/system/etcd.service
 ```
 

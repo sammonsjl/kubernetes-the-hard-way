@@ -68,12 +68,6 @@ exit
 
 In this section you will download the binaries for the various Kubernetes components. The binaries will be stored in the `downloads` directory on the `controlplane01` node, which will reduce the amount of internet bandwidth required to complete this tutorial as we avoid downloading the binaries multiple times for each machine in our Kubernetes cluster.
 
-From the `kubernetes-the-hard-way` directory create a `downloads` directory using the `mkdir` command:
-
-```bash
-mkdir downloads
-```
-
 The binaries that will be downloaded are listed in the `downloads.txt` file, which you can review using the `cat` command:
 
 ```bash
@@ -90,7 +84,7 @@ wget -q --progress=bar:force \
   -i downloads.txt
 ```
 
-Depending on your internet connection speed it may take a while to download the `584` megabytes of binaries, and once the download is complete, you can list them using the `ls` command:
+Depending on your internet connection speed it may take a while to download the `560` megabytes of binaries, and once the download is complete, you can list them using the `ls` command:
 
 ```bash
 ls -loh downloads

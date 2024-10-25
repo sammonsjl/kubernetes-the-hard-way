@@ -158,12 +158,12 @@ subjectAltName       = @kube-apiserver_alt_names
 subjectKeyIdentifier = hash
 
 [kube-apiserver_alt_names]
-IP.0  = 127.0.0.1
-IP.1  = 10.96.0.1
-IP.2 = 192.168.100.11
-IP.3 = 192.168.100.12
-IP.4 = 192.168.100.13
-IP.5 = 192.168.100.30
+IP.0 = 127.0.0.1
+IP.1 = ${API_SERVICE}
+IP.2 = ${CONTROL01}
+IP.3 = ${CONTROL02}
+IP.4 = ${CONTROL03}
+IP.5 = ${LOADBALANCER}
 DNS.1 = kubernetes
 DNS.2 = kubernetes.default
 DNS.3 = kubernetes.default.svc
@@ -208,10 +208,10 @@ subjectAltName       = @etcd-server_alt_names
 subjectKeyIdentifier = hash
 
 [etcd-server_alt_names]
-IP.0  = 127.0.0.1
-IP.1  = 192.168.100.11
-IP.2  = 192.168.100.12
-IP.3  = 192.168.100.13
+IP.0 = 127.0.0.1
+IP.1 = ${CONTROL01}
+IP.2 = ${CONTROL02}
+IP.3 = ${CONTROL03}
 DNS.0 = localhost
 
 [etcd-server_distinguished_name]
