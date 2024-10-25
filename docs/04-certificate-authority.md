@@ -12,7 +12,51 @@ In our case we do the following steps on the `controlplane01` node, as we have s
 
 ## Certificate Authority
 
-In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates for the other Kubernetes components. Setting up CA and generating certificates using `openssl` can be time-consuming, especially when doing it for the first time. To streamline this lab, I've included an openssl configuration file `ca.conf`, which defines all the details needed to generate certificates for each Kubernetes component. 
+In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates.
+
+Query IPs of hosts we will insert as certificate subject alternative names (SANs), which will be read from `/etc/hosts`.
+
+Set up environment variables. Run the following:
+
+```bash
+CONTROL01=$(dig +short controlplane01)
+CONTROL02=$(dig +short controlplane02)
+LOADBALANCER=$(dig +short loadbalancer)
+```
+
+Compute cluster internal API server service address, which is always `.1` in the service CIDR range. This is also required as a SAN in the API server certificate. Run the following:
+
+```bash
+SERVICE_CIDR=10.96.0.0/24
+API_SERVICE=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.1", $1, $2, $3) }')
+```
+
+Check that the environment variables are set. Run the following:
+
+```bash
+echo $CONTROL01
+echo $CONTROL02
+echo $LOADBALANCER
+echo $SERVICE_CIDR
+echo $API_SERVICE
+```
+
+The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ. The first 3 addresses will also be different for Apple Silicon on Multipass (likely 192.168.64.x).
+
+```
+192.168.56.11
+192.168.56.12
+192.168.56.30
+10.96.0.0/24
+10.96.0.1
+```
+
+Prepare the `ca.conf` openssl conf file:
+
+```bash
+envsubst < templates/ca.conf.template \
+  > ca.conf
+```
 
 Take a moment to review the `ca.conf` configuration file:
 
