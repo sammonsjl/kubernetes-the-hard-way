@@ -176,6 +176,24 @@ etcd-0               Healthy   ok
 
 > Remember to run the above commands on each controller node: `controlplane01`, `controlplane02` and `controlplane03`.
 
+## RBAC for Kubelet Authorization
+
+In this section you will configure RBAC permissions to allow the Kubernetes API Server to access the Kubelet API on each worker node. Access to the Kubelet API is required for retrieving metrics, logs, and executing commands in pods.
+
+> This tutorial sets the Kubelet `--authorization-mode` flag to `Webhook`. Webhook mode uses the [SubjectAccessReview](https://kubernetes.io/docs/admin/authorization/#checking-api-access) API to determine authorization.
+
+
+[//]: # (host:controlplane01)
+
+Run the below on the `controlplane01` node.
+
+Create the `system:kube-apiserver-to-kubelet` [ClusterRole](https://kubernetes.io/docs/admin/authorization/rbac/#role-and-clusterrole) with permissions to access the Kubelet API and perform most common tasks associated with managing pods:
+
+```bash
+kubectl apply -f configs/kube-apiserver-to-kubelet.yaml \
+  --kubeconfig admin.kubeconfig
+```
+
 ## The Kubernetes Frontend Load Balancer
 
 In this section you will provision an external load balancer to front the Kubernetes API Servers. The `kubernetes-the-hard-way` static IP address will be attached to the resulting load balancer.
@@ -226,6 +244,8 @@ EOF
 ```
 
 ```bash
+
+sudo systemctl enable haproxy
 sudo systemctl restart haproxy
 ```
 
