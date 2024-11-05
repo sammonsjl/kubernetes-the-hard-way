@@ -68,7 +68,6 @@ Install the worker binaries:
 }
 ```
 
-
 ### Configure CNI Networking
 
 Create the `bridge` network configuration file:
@@ -141,108 +140,17 @@ node02     NotReady   <none>   93s   v1.28.4
 
 The node is not ready as we have not yet installed pod networking. This comes later.
 
-### The kubelet Kubernetes Configuration File
 
-When generating kubeconfig files for Kubelets the client certificate matching the Kubelet's node name must be used. This will ensure Kubelets are properly authorized by the Kubernetes [Node Authorizer](https://kubernetes.io/docs/admin/authorization/node/).
+## Optional - Check Certificates and kubeconfigs
 
-Get the kube-api server load-balancer IP.
+At `node01` node, run the following, selecting option 4
 
-```bash
-LOADBALANCER=$(dig +short loadbalancer)
-```
-
-Generate a kubeconfig file for the first worker node.
-
-On `controlplane01`:
-```bash
-{
-  kubectl config set-cluster kubernetes-the-hard-way \
-    --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
-    --server=https://${LOADBALANCER}:6443 \
-    --kubeconfig=node01.kubeconfig
-
-  kubectl config set-credentials system:node:node01 \
-    --client-certificate=/var/lib/kubernetes/pki/node01.crt \
-    --client-key=/var/lib/kubernetes/pki/node01.key \
-    --kubeconfig=node01.kubeconfig
-
-  kubectl config set-context default \
-    --cluster=kubernetes-the-hard-way \
-    --user=system:node:node01 \
-    --kubeconfig=node01.kubeconfig
-
-  kubectl config use-context default --kubeconfig=node01.kubeconfig
-}
-```
-
-Results:
+[//]: # (command:./cert_verify.sh 4)
 
 ```
-node01.kubeconfig
+./cert_verify.sh
 ```
 
-### Copy certificates, private keys and kubeconfig files to the worker node:
-On `controlplane01`:
-
-```bash
-scp ca.crt node01.crt node01.key node01.kubeconfig node01:~/
-```
-
-
-### Download and Install Worker Binaries
-
-All the following commands from here until the [verification](#verification) step must be run on `node01`
-
-[//]: # (host:node01)
-
-
-```bash
-KUBE_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-
-wget -q --show-progress --https-only --timestamping \
-  https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${ARCH}/kube-proxy \
-  https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/${ARCH}/kubelet 
-```
-
-Reference: https://kubernetes.io/releases/download/#binaries
-
-Create the installation directories:
-
-```bash
-sudo mkdir -p \
-  /var/lib/kubelet \
-  /var/lib/kube-proxy \
-  /var/lib/kubernetes/pki \
-  /var/run/kubernetes
-```
-
-Install the worker binaries:
-
-```bash
-{
-  chmod +x kube-proxy kubelet
-  sudo mv kube-proxy kubelet /usr/local/bin/
-}
-```
-
-### Configure the Kubelet
-
-On `node01`:
-
-Copy keys and config to correct directories and secure
-
-```bash
-{
-  sudo mv ${HOSTNAME}.key ${HOSTNAME}.crt /var/lib/kubernetes/pki/
-  sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubelet.kubeconfig
-  sudo mv ca.crt /var/lib/kubernetes/pki/
-  sudo mv kube-proxy.crt kube-proxy.key /var/lib/kubernetes/pki/
-  sudo chown root:root /var/lib/kubernetes/pki/*
-  sudo chmod 600 /var/lib/kubernetes/pki/*
-  sudo chown root:root /var/lib/kubelet/*
-  sudo chmod 600 /var/lib/kubelet/*
-}
-```
 
 CIDR ranges used *within* the cluster
 
@@ -354,17 +262,6 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 ```
-
-## Optional - Check Certificates and kubeconfigs
-
-At `node01` node, run the following, selecting option 4
-
-[//]: # (command:./cert_verify.sh 4)
-
-```
-./cert_verify.sh
-```
-
 
 ### Start the Worker Services
 
