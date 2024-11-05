@@ -1,56 +1,145 @@
 # Bootstrapping the Kubernetes Worker Nodes
 
-In this lab you will bootstrap 2 Kubernetes worker nodes. We already installed `containerd` and its dependencies on these nodes in the previous lab.
+In this lab you will bootstrap two Kubernetes worker nodes. The following components will be installed: [runc](https://github.com/opencontainers/runc), [container networking plugins](https://github.com/containernetworking/cni), [containerd](https://github.com/containerd/containerd), [kubelet](https://kubernetes.io/docs/admin/kubelet), and [kube-proxy](https://kubernetes.io/docs/concepts/cluster-administration/proxies).
 
-We will now install the kubernetes components
-- [kubelet](https://kubernetes.io/docs/admin/kubelet)
-- [kube-proxy](https://kubernetes.io/docs/concepts/cluster-administration/proxies).
 
 ## Prerequisites
 
-The Certificates and Configuration are created on `controlplane01` node and then copied over to workers using `scp`.
-Once this is done, the commands are to be run on first worker instance: `node01`. Login to first worker instance using SSH Terminal.
+The commands in this lab must be run on each worker instance: `node01` and `node02` Login to each controller instance using SSH Terminal.
 
-### Provisioning Kubelet Client Certificates
+You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 
-Kubernetes uses a [special-purpose authorization mode](https://kubernetes.io/docs/admin/authorization/node/) called Node Authorizer, that specifically authorizes API requests made by [Kubelets](https://kubernetes.io/docs/concepts/overview/components/#kubelet). In order to be authorized by the Node Authorizer, Kubelets must use a credential that identifies them as being in the `system:nodes` group, with a username of `system:node:<nodeName>`. In this section you will create a certificate for each Kubernetes worker node that meets the Node Authorizer requirements.
+## Provisioning a Kubernetes Worker Node
 
-Generate a certificate and private key for one worker node:
+[//]: # (host:node01-node02)
 
-On `controlplane01`:
+Install the OS dependencies:
+
+```bash
+{
+  sudo dnf install -y socat conntrack ipset
+}
+```
+
+> The socat binary enables support for the `kubectl port-forward` command.
+
+### Disable Swap
+
+By default, the kubelet will fail to start if is enabled. It is [recommended](https://github.com/kubernetes/kubernetes/issues/7294) that swap be disabled to ensure Kubernetes can provide proper resource allocation and quality of service.
+
+Verify if swap is enabled:
+
+```bash
+swapon --show
+```
+
+If output is empty then swap is not enabled. If swap is enabled run the following command to disable swap immediately:
+
+```bash
+sudo swapoff -a
+```
+
+> To ensure swap remains off after reboot consult your Linux distro documentation.
+
+Create the installation directories:
+
+```bash
+sudo mkdir -p \
+  /etc/cni/net.d \
+  /opt/cni/bin \
+  /var/lib/kubelet \
+  /var/lib/kube-proxy \
+  /var/lib/kubernetes \
+  /var/run/kubernetes
+```
+
+Install the worker binaries:
+
+```bash
+{
+  mkdir -p containerd
+  tar -xvf crictl-v1.28.0-linux-arm.tar.gz
+  tar -xvf containerd-1.7.8-linux-arm64.tar.gz -C containerd
+  sudo tar -xvf cni-plugins-linux-arm64-v1.3.0.tgz -C /opt/cni/bin/
+  mv runc.arm64 runc
+  chmod +x crictl kubectl kube-proxy kubelet runc 
+  sudo mv crictl kubectl kube-proxy kubelet runc /usr/local/bin/
+  sudo mv containerd/bin/* /bin/
+}
+```
+
+
+### Configure CNI Networking
+
+Create the `bridge` network configuration file:
+
+```bash
+mv 10-bridge.conf 99-loopback.conf /etc/cni/net.d/
+```
+
+### Configure containerd
+
+Install the `containerd` configuration files:
+
+```bash
+{
+  mkdir -p /etc/containerd/
+  mv containerd-config.toml /etc/containerd/config.toml
+  mv containerd.service /etc/systemd/system/
+}
+```
+
+### Configure the Kubelet
+
+Create the `kubelet-config.yaml` configuration file:
+
+```bash
+{
+  mv kubelet-config.yaml /var/lib/kubelet/
+  mv kubelet.service /etc/systemd/system/
+}
+```
+
+### Configure the Kubernetes Proxy
+
+```bash
+{
+  mv kube-proxy-config.yaml /var/lib/kube-proxy/
+  mv kube-proxy.service /etc/systemd/system/
+}
+```
+
+### Start the Worker Services
+
+```bash
+{
+  systemctl daemon-reload
+  systemctl enable containerd kubelet kube-proxy
+  systemctl start containerd kubelet kube-proxy
+}
+```
+
+## Verification
 
 [//]: # (host:controlplane01)
 
-```bash
-NODE01=$(dig +short node01)
-```
+Now return to the `controlplane01` node.
+
+List the registered Kubernetes nodes from the controlplane node:
 
 ```bash
-cat > openssl-node01.cnf <<EOF
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[ v3_req ]
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = node01
-IP.1 = ${NODE01}
-EOF
-
-openssl genrsa -out node01.key 2048
-openssl req -new -key node01.key -subj "/CN=system:node:node01/O=system:nodes" -out node01.csr -config openssl-node01.cnf
-openssl x509 -req -in node01.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out node01.crt -extensions v3_req -extfile openssl-node01.cnf -days 1000
+kubectl get nodes --kubeconfig admin.kubeconfig
 ```
 
-Results:
+Output will be similar to
 
 ```
-node01.key
-node01.crt
+NAME       STATUS     ROLES    AGE   VERSION
+node01     NotReady   <none>   93s   v1.28.4
+node02     NotReady   <none>   93s   v1.28.4
 ```
+
+The node is not ready as we have not yet installed pod networking. This comes later.
 
 ### The kubelet Kubernetes Configuration File
 
@@ -290,27 +379,6 @@ On `node01`:
 ```
 
 > Remember to run the above commands on worker node: `node01`
-
-## Verification
-
-[//]: # (host:controlplane01)
-
-Now return to the `controlplane01` node.
-
-List the registered Kubernetes nodes from the controlplane node:
-
-```bash
-kubectl get nodes --kubeconfig admin.kubeconfig
-```
-
-Output will be similar to
-
-```
-NAME       STATUS     ROLES    AGE   VERSION
-node01     NotReady   <none>   93s   v1.28.4
-```
-
-The node is not ready as we have not yet installed pod networking. This comes later.
 
 Next: [TLS Bootstrapping Kubernetes Workers](./11-tls-bootstrapping-kubernetes-workers.md)<br>
 Prev: [Installing CRI on the Kubernetes Worker Nodes](./09-install-cri-workers.md)
