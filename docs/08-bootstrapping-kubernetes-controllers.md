@@ -246,7 +246,7 @@ EOF
 ```bash
 
 sudo systemctl enable haproxy
-sudo systemctl restart haproxy
+sudo systemctl start haproxy
 ```
 
 ### Verification

@@ -92,7 +92,7 @@ Generate the certificates and private keys:
 
 ```bash
 certs=(
-  "admin" "node-0" "node-1"
+  "admin" "node01" "node02"
   "kube-proxy" "kube-scheduler"
   "kube-controller-manager"
   "apiserver-kubelet-client"

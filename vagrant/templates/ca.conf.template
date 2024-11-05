@@ -45,39 +45,39 @@ O = Kubernetes
 # that identifies them as being in the `system:nodes` group, with a username
 # of `system:node:<nodeName>`.
 
-[node-0]
-distinguished_name = node-0_distinguished_name
+[node01]
+distinguished_name = node01_distinguished_name
 prompt             = no
-req_extensions     = node-0_req_extensions
+req_extensions     = node01_req_extensions
 
-[node-0_req_extensions]
+[node01_req_extensions]
 basicConstraints     = CA:FALSE
 extendedKeyUsage     = clientAuth, serverAuth
 keyUsage             = critical, digitalSignature, keyEncipherment
 nsCertType           = client
-nsComment            = "Node-0 Certificate"
-subjectAltName       = DNS:node-0, IP:127.0.0.1
+nsComment            = "Node01 Certificate"
+subjectAltName       = DNS:node01, IP:127.0.0.1
 subjectKeyIdentifier = hash
 
-[node-0_distinguished_name]
-CN = system:node:node-0
+[node01_distinguished_name]
+CN = system:node:node01
 
-[node-1]
-distinguished_name = node-1_distinguished_name
+[node02]
+distinguished_name = node02_distinguished_name
 prompt             = no
-req_extensions     = node-1_req_extensions
+req_extensions     = node02_req_extensions
 
-[node-1_req_extensions]
+[node02_req_extensions]
 basicConstraints     = CA:FALSE
 extendedKeyUsage     = clientAuth, serverAuth
 keyUsage             = critical, digitalSignature, keyEncipherment
 nsCertType           = client
-nsComment            = "Node-1 Certificate"
-subjectAltName       = DNS:node-1, IP:127.0.0.1
+nsComment            = "Node02 Certificate"
+subjectAltName       = DNS:node02, IP:127.0.0.1
 subjectKeyIdentifier = hash
 
-[node-1_distinguished_name]
-CN = system:node:node-1
+[node02_distinguished_name]
+CN = system:node:node02
 
 # Kube Proxy Section
 [kube-proxy]
