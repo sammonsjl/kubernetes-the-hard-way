@@ -166,7 +166,7 @@ for instance in controlplane01 controlplane02 controlplane03; do
 done
 
 for instance in node01 node02 ; do
-  scp ca.crt kube-proxy.crt kube-proxy.key ${instance}:~/
+  scp ca.crt kube-proxy.crt kube-proxy.key ${instance}.key ${instance}.crt ${instance}:~/
 done
 }
 ```
