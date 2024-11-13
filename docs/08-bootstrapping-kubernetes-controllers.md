@@ -9,7 +9,7 @@ If you examine the command line arguments passed to the various control plane co
 
 ## Prerequisites
 
-The commands in this lab up as far as the load balancer configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`. Login to each controller instance using SSH Terminal.
+The commands in this lab up as far as the load balancer configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`. Login to each controller instance using vagrant ssh terminal.
 
 You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 

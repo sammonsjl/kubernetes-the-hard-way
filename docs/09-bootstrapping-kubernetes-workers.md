@@ -5,7 +5,7 @@ In this lab you will bootstrap two Kubernetes worker nodes. The following compon
 
 ## Prerequisites
 
-The commands in this lab must be run on each worker instance: `node01` and `node02` Login to each controller instance using SSH Terminal.
+The commands in this lab must be run on each worker instance: `node01` and `node02` Login to each controller instance using vagrant ssh terminal.
 
 You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 
