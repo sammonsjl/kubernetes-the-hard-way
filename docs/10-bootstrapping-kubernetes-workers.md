@@ -41,7 +41,7 @@ sudo swapoff -a
 
 > To ensure swap remains off after reboot consult your Linux distro documentation.
 
-Create the installation directories:
+### Install the worker binaries:
 
 ```bash
 sudo mkdir -p \
@@ -49,11 +49,14 @@ sudo mkdir -p \
   /opt/cni/bin \
   /var/lib/kubelet \
   /var/lib/kube-proxy \
-  /var/lib/kubernetes \
+  /var/lib/kubernetes/pki \
   /var/run/kubernetes
-```
 
-Install the worker binaries:
+  sudo chown root:root /var/lib/kubernetes/pki/*
+  sudo chmod 600 /var/lib/kubernetes/pki/*
+  sudo chown root:root /var/lib/kubelet/*
+  sudo chmod 600 /var/lib/kubelet/*
+```
 
 ```bash
 {
@@ -68,12 +71,32 @@ Install the worker binaries:
 }
 ```
 
+### Configure the Kubelet
+
+export the CIDR ranges used *within* the cluster
+
+```bash
+export POD_CIDR=10.244.0.0/16
+export SERVICE_CIDR=10.96.0.0/16
+```
+
+Compute cluster DNS addess, which is conventionally .10 in the service CIDR range
+
+```bash
+export CLUSTER_DNS=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.10", $1, $2, $3) }')
+```
+
 ### Configure CNI Networking
 
 Create the `bridge` network configuration file:
 
 ```bash
-mv 10-bridge.conf 99-loopback.conf /etc/cni/net.d/
+envsubst < templates/10-bridge.conf.template \
+| sudo tee /etc/cni/net.d/10-bridge.conf
+```
+
+```bash
+sudo mv 99-loopback.conf /etc/cni/net.d/
 ```
 
 ### Configure containerd
@@ -82,9 +105,9 @@ Install the `containerd` configuration files:
 
 ```bash
 {
-  mkdir -p /etc/containerd/
-  mv containerd-config.toml /etc/containerd/config.toml
-  mv containerd.service /etc/systemd/system/
+  sudo mkdir -p /etc/containerd/
+  sudo mv containerd-config.toml /etc/containerd/config.toml
+  sudo mv containerd.service /etc/systemd/system/
 }
 ```
 
@@ -94,8 +117,16 @@ Create the `kubelet-config.yaml` configuration file:
 
 ```bash
 {
-  mv kubelet-config.yaml /var/lib/kubelet/
-  mv kubelet.service /etc/systemd/system/
+
+  envsubst < templates/kubelet-config.yaml.template \
+|   sudo tee /var/lib/kubelet/kubelet-config.yaml
+
+  sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet
+  sudo mv kubelet.service /etc/systemd/system/
+
+  sudo mv ${HOSTNAME}.key ${HOSTNAME}.crt /var/lib/kubernetes/pki/
+  sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet
+  sudo mv ca.crt /var/lib/kubernetes/pki/
 }
 ```
 
@@ -103,8 +134,11 @@ Create the `kubelet-config.yaml` configuration file:
 
 ```bash
 {
-  mv kube-proxy-config.yaml /var/lib/kube-proxy/
-  mv kube-proxy.service /etc/systemd/system/
+  envsubst < templates/kube-proxy-config.yaml.template \
+|   sudo tee /var/lib/kubelet/kube-proxy-config.yaml
+
+  sudo mv kube-proxy.crt kube-proxy.key /var/lib/kubernetes/pki/
+  sudo mv kube-proxy.service /etc/systemd/system/
 }
 ```
 
@@ -112,9 +146,9 @@ Create the `kubelet-config.yaml` configuration file:
 
 ```bash
 {
-  systemctl daemon-reload
-  systemctl enable containerd kubelet kube-proxy
-  systemctl start containerd kubelet kube-proxy
+  sudo systemctl daemon-reload
+  sudo systemctl enable containerd kubelet kube-proxy
+  sudo systemctl start containerd kubelet kube-proxy
 }
 ```
 

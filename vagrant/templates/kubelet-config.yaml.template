@@ -11,11 +11,12 @@ authorization:
   mode: Webhook
 clusterDomain: "cluster.local"
 clusterDNS:
-  - "10.32.0.10"
+  - ${CLUSTER_DNS}
 cgroupDriver: systemd
 containerRuntimeEndpoint: "unix:///var/run/containerd/containerd.sock"
-podCIDR: "SUBNET"
+podCIDR: ${POD_CIDR}
 resolvConf: "/etc/resolv.conf"
 runtimeRequestTimeout: "15m"
-tlsCertFile: "/var/lib/kubelet/kubelet.crt"
-tlsPrivateKeyFile: "/var/lib/kubelet/kubelet.key"
+tlsCertFile: /var/lib/kubernetes/pki/${HOSTNAME}.crt
+tlsPrivateKeyFile: /var/lib/kubernetes/pki/${HOSTNAME}.key
+registerNode: true
