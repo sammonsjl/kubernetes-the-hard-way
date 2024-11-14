@@ -116,7 +116,6 @@ Create the `kubelet-config.yaml` configuration file:
 
 ```bash
 {
-
   envsubst < templates/kubelet-config.yaml.template \
 |   sudo tee /var/lib/kubelet/kubelet-config.yaml
 
