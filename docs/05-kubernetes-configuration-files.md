@@ -21,26 +21,26 @@ When generating kubeconfig files for Kubelets the client certificate matching th
 Generate a kubeconfig file for worker node01 and node02:
 
 ```bash
-for host in node01 node02; do
+for instance in node01 node02; do
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.crt \
     --embed-certs=true \
-    --server=https://server.kubernetes.local:6443 \
-    --kubeconfig=${host}.kubeconfig
+    --server=https://${LOADBALANCER}:6443 \
+    --kubeconfig=${instance}.kubeconfig
 
-  kubectl config set-credentials system:node:${host} \
-    --client-certificate=${host}.crt \
-    --client-key=${host}.key \
+  kubectl config set-credentials system:node:${instance} \
+    --client-certificate=${instance}.crt \
+    --client-key=${instance}.key \
     --embed-certs=true \
-    --kubeconfig=${host}.kubeconfig
+    --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-context default \
     --cluster=kubernetes-the-hard-way \
-    --user=system:node:${host} \
-    --kubeconfig=${host}.kubeconfig
+    --user=system:node:${instance} \
+    --kubeconfig=${instance}.kubeconfig
 
   kubectl config use-context default \
-    --kubeconfig=${host}.kubeconfig
+    --kubeconfig=${instance}.kubeconfig
 done
 ```
 

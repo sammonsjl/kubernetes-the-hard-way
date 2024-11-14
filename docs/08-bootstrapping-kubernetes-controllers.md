@@ -25,15 +25,19 @@ Install the Kubernetes binaries:
 
 ```bash
 {
+  cd ~/downloads
+
   chmod +x downloads/kube-apiserver \
     downloads/kube-controller-manager \
     downloads/kube-scheduler \
     downloads/kubectl
 
-  sudo mv downloads/kube-apiserver \
+  sudo cp downloads/kube-apiserver \
     downloads/kube-controller-manager \
     downloads/kube-scheduler \
     downloads/kubectl /usr/local/bin/
+
+    cd ~
 }
 ```
 
@@ -48,7 +52,7 @@ Install the Kubernetes binaries:
 
     for c in kube-apiserver service-account apiserver-kubelet-client etcd-server kube-scheduler kube-controller-manager
     do
-      sudo mv "$c.crt" "$c.key" /var/lib/kubernetes/pki/
+      sudo cp "$c.crt" "$c.key" /var/lib/kubernetes/pki/
     done
 
     sudo chown root:root /var/lib/kubernetes/pki/*
@@ -90,7 +94,7 @@ envsubst < templates/kube-apiserver.service.template \
 Move the `kube-controller-manager` kubeconfig into place:
 
 ```bash
-sudo mv kube-controller-manager.kubeconfig /var/lib/kubernetes/
+sudo cp kube-controller-manager.kubeconfig /var/lib/kubernetes/
 ```
 
 Create the `kube-controller-manager.service` systemd unit file:
@@ -105,14 +109,14 @@ envsubst < templates/kube-controller-manager.service.template \
 Move the `kube-scheduler` kubeconfig into place:
 
 ```bash
-sudo mv kube-scheduler.kubeconfig /var/lib/kubernetes/
+sudo cp kube-scheduler.kubeconfig /var/lib/kubernetes/
 ```
 
 Create the `kube-scheduler.yaml` configuration file:
 
 ```bash
 sudo mkdir -p /etc/kubernetes/config/
-sudo mv configs/kube-scheduler.yaml /etc/kubernetes/config/
+sudo cp configs/kube-scheduler.yaml /etc/kubernetes/config/
 ```
 
 Create the `kube-scheduler.service` systemd unit file:

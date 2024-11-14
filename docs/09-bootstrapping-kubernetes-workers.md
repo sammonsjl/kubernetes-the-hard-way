@@ -16,9 +16,7 @@ You can perform this step with [tmux](01-prerequisites.md#running-commands-in-pa
 Install the OS dependencies:
 
 ```bash
-{
   sudo dnf install -y socat conntrack ipset
-}
 ```
 
 > The socat binary enables support for the `kubectl port-forward` command.
@@ -36,12 +34,14 @@ swapon --show
 If output is empty then swap is not enabled. If swap is enabled run the following command to disable swap immediately:
 
 ```bash
+sudo touch /etc/systemd/zram-generator.conf 
+
 sudo swapoff -a
 ```
 
 > To ensure swap remains off after reboot consult your Linux distro documentation.
 
-### Install the worker binaries:
+### Install the worker node binaries:
 
 ```bash
 sudo mkdir -p \
@@ -51,29 +51,28 @@ sudo mkdir -p \
   /var/lib/kube-proxy \
   /var/lib/kubernetes/pki \
   /var/run/kubernetes
-
-  sudo chown root:root /var/lib/kubernetes/pki/*
-  sudo chmod 600 /var/lib/kubernetes/pki/*
-  sudo chown root:root /var/lib/kubelet/*
-  sudo chmod 600 /var/lib/kubelet/*
 ```
 
 ```bash
 {
+  cd ~/downloads
+
   mkdir -p containerd
-  tar -xvf crictl-v1.28.0-linux-arm.tar.gz
-  tar -xvf containerd-1.7.8-linux-arm64.tar.gz -C containerd
-  sudo tar -xvf cni-plugins-linux-arm64-v1.3.0.tgz -C /opt/cni/bin/
-  mv runc.arm64 runc
+  tar -xvf crictl-v1.31.1-linux-amd64.tar.gz
+  tar -xvf containerd-1.7.23-linux-amd64.tar.gz -C containerd
+  sudo tar -xvf cni-plugins-linux-amd64-v1.6.0.tgz -C /opt/cni/bin/
+  mv runc.amd64 runc
   chmod +x crictl kubectl kube-proxy kubelet runc 
-  sudo mv crictl kubectl kube-proxy kubelet runc /usr/local/bin/
-  sudo mv containerd/bin/* /bin/
+  sudo cp crictl kubectl kube-proxy kubelet runc /usr/local/bin/
+  sudo cp containerd/bin/* /bin/
+
+  cd ~
 }
 ```
 
 ### Configure the Kubelet
 
-export the CIDR ranges used *within* the cluster
+CIDR ranges used *within* the cluster
 
 ```bash
 export POD_CIDR=10.244.0.0/16
@@ -96,7 +95,7 @@ envsubst < templates/10-bridge.conf.template \
 ```
 
 ```bash
-sudo mv 99-loopback.conf /etc/cni/net.d/
+sudo cp configs/99-loopback.conf /etc/cni/net.d/
 ```
 
 ### Configure containerd
@@ -106,8 +105,8 @@ Install the `containerd` configuration files:
 ```bash
 {
   sudo mkdir -p /etc/containerd/
-  sudo mv containerd-config.toml /etc/containerd/config.toml
-  sudo mv containerd.service /etc/systemd/system/
+  sudo cp configs/containerd-config.toml /etc/containerd/config.toml
+  sudo cp configs/containerd.service /etc/systemd/system/
 }
 ```
 
@@ -121,12 +120,13 @@ Create the `kubelet-config.yaml` configuration file:
   envsubst < templates/kubelet-config.yaml.template \
 |   sudo tee /var/lib/kubelet/kubelet-config.yaml
 
-  sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet
-  sudo mv kubelet.service /etc/systemd/system/
+  envsubst < templates/kubelet.service.template \
+|   sudo tee /etc/systemd/system/kubelet.service
 
-  sudo mv ${HOSTNAME}.key ${HOSTNAME}.crt /var/lib/kubernetes/pki/
-  sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet
-  sudo mv ca.crt /var/lib/kubernetes/pki/
+  sudo cp ${HOSTNAME}.kubeconfig /var/lib/kubelet
+  sudo cp ${HOSTNAME}.key ${HOSTNAME}.crt /var/lib/kubernetes/pki/
+  sudo cp ${HOSTNAME}.kubeconfig /var/lib/kubelet
+  sudo cp ca.crt /var/lib/kubernetes/pki/
 }
 ```
 
@@ -135,11 +135,21 @@ Create the `kubelet-config.yaml` configuration file:
 ```bash
 {
   envsubst < templates/kube-proxy-config.yaml.template \
-|   sudo tee /var/lib/kubelet/kube-proxy-config.yaml
+|   sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
 
-  sudo mv kube-proxy.crt kube-proxy.key /var/lib/kubernetes/pki/
-  sudo mv kube-proxy.service /etc/systemd/system/
+  sudo cp kube-proxy.crt kube-proxy.key /var/lib/kubernetes/pki/
+  sudo cp kube-proxy.kubeconfig /var/lib/kube-proxy
+  sudo cp configs/kube-proxy.service /etc/systemd/system/
 }
+```
+
+### Fix Permissions
+
+```bash
+sudo chown root:root /var/lib/kubernetes/pki/*
+sudo chmod 600 /var/lib/kubernetes/pki/*
+sudo chown root:root /var/lib/kubelet/*
+sudo chmod 600 /var/lib/kubelet/*
 ```
 
 ### Start the Worker Services
