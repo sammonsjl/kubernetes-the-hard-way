@@ -37,6 +37,7 @@ Check that the environment variables are set. Run the following:
 ```bash
 echo $CONTROL01
 echo $CONTROL02
+echo $CONTROL03
 echo $LOADBALANCER
 echo $SERVICE_CIDR
 echo $API_SERVICE

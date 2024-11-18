@@ -23,15 +23,13 @@ Generate a kubeconfig file for worker node01 and node02:
 ```bash
 for instance in node01 node02; do
   kubectl config set-cluster kubernetes-the-hard-way \
-    --certificate-authority=ca.crt \
-    --embed-certs=true \
+    --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
     --server=https://${LOADBALANCER}:6443 \
     --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-credentials system:node:${instance} \
-    --client-certificate=${instance}.crt \
-    --client-key=${instance}.key \
-    --embed-certs=true \
+    --client-certificate=/var/lib/kubernetes/pki/${instance}.crt \
+    --client-key=/var/lib/kubernetes/pki/${instance}.key \
     --kubeconfig=${instance}.kubeconfig
 
   kubectl config set-context default \

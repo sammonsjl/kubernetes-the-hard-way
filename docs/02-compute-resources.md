@@ -5,7 +5,7 @@ Note: You must have KVM and Vagrant configured at this point.
 Download this github repository and cd into the vagrant folder:
 
 ```bash
-git clone https://github.com/mmumshad/kubernetes-the-hard-way.git
+git clone https://github.com/sammonsjl/kubernetes-the-hard-way.git
 ```
 
 CD into vagrant directory:
@@ -105,7 +105,7 @@ This will most likely happen at "Waiting for machine to reboot"
 1. Destroy the VM that got stuck: `vagrant destroy \<vm\>`
 1. Re-provision. It will pick up where it left off: `vagrant up`
 
-# Pausing the Environment
+# Halting the Environment
 
 You do not need to complete the entire lab in one session. You may shut down and resume the environment as follows, if you need to power off your computer.
 

@@ -9,7 +9,7 @@ If you examine the command line arguments passed to the various control plane co
 
 ## Prerequisites
 
-The commands in this lab up as far as the load balancer configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`. Login to each controller instance using vagrant ssh terminal.
+The commands in this lab up as far as the RBAC configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`. Login to each controller instance using vagrant ssh terminal.
 
 You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 
@@ -27,15 +27,15 @@ Install the Kubernetes binaries:
 {
   cd ~/downloads
 
-  chmod +x downloads/kube-apiserver \
-    downloads/kube-controller-manager \
-    downloads/kube-scheduler \
-    downloads/kubectl
+  chmod +x kube-apiserver \
+    kube-controller-manager \
+    kube-scheduler \
+    kubectl
 
-  sudo cp downloads/kube-apiserver \
-    downloads/kube-controller-manager \
-    downloads/kube-scheduler \
-    downloads/kubectl /usr/local/bin/
+  sudo cp kube-apiserver \
+    kube-controller-manager \
+    kube-scheduler \
+    kubectl /usr/local/bin/
 
     cd ~
 }
