@@ -61,6 +61,7 @@ subjectKeyIdentifier = hash
 
 [node01_distinguished_name]
 CN = system:node:node01
+O = system:nodes
 
 [node02]
 distinguished_name = node02_distinguished_name
@@ -78,6 +79,7 @@ subjectKeyIdentifier = hash
 
 [node02_distinguished_name]
 CN = system:node:node02
+O = system:nodes
 
 # Kube Proxy Section
 [kube-proxy]

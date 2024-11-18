@@ -16,8 +16,6 @@ LOADBALANCER=$(dig +short loadbalancer)
 
 When generating kubeconfig files for Kubelets the client certificate matching the Kubelet's node name must be used. This will ensure Kubelets are properly authorized by the Kubernetes [Node Authorizer](https://kubernetes.io/docs/admin/authorization/node/).
 
-> The following commands must be run in the same directory used to generate the SSL certificates during the [Generating TLS Certificates](04-certificate-authority.md) lab.
-
 Generate a kubeconfig file for worker node01 and node02:
 
 ```bash

@@ -122,7 +122,7 @@ Create the `kubelet-config.yaml` configuration file:
   envsubst < templates/kubelet.service.template \
 |   sudo tee /etc/systemd/system/kubelet.service
 
-  sudo cp ${HOSTNAME}.kubeconfig /var/lib/kubelet
+  sudo cp ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubelet.kubeconfig
   sudo cp ${HOSTNAME}.key ${HOSTNAME}.crt /var/lib/kubernetes/pki/
   sudo cp ${HOSTNAME}.kubeconfig /var/lib/kubelet
   sudo cp ca.crt /var/lib/kubernetes/pki/
@@ -186,7 +186,7 @@ The node is not ready as we have not yet installed pod networking. This comes la
 
 ## Optional - Check Certificates and kubeconfigs
 
-At `node01` node, run the following, selecting option 4
+ON `node01` node, run the following, selecting option 4
 
 [//]: # (command:./cert_verify.sh 4)
 
