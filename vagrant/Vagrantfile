@@ -49,8 +49,9 @@ def provision_kubernetes_node(node)
   # Install cert verification script
   node.vm.provision "shell", inline: "chmod +x /vagrant/cert_verify.sh && ln -s /vagrant/cert_verify.sh /home/vagrant/cert_verify.sh"
   # Provide Kubernetes Config
-  node.vm.provision "shell", inline: "ln -s /vagrant/downloads.txt /home/vagrant/downloads.txt"
   node.vm.provision "shell", inline: "ln -s /vagrant/configs /home/vagrant/configs"
+  node.vm.provision "shell", inline: "ln -s /vagrant/downloads.txt /home/vagrant/downloads.txt"
+  node.vm.provision "shell", inline: "ln -s /vagrant/liferay /home/vagrant/liferay"
   node.vm.provision "shell", inline: "ln -s /vagrant/templates /home/vagrant/templates"
 end
 
