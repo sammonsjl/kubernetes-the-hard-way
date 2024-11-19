@@ -101,7 +101,6 @@ Clean up test resources
 
 
 ```bash
-kubectl delete pod -n default busybox
 kubectl delete service -n default nginx
 kubectl delete deployment -n default nginx
 ```
