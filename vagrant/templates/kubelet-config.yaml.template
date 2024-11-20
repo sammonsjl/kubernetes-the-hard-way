@@ -15,7 +15,7 @@ clusterDNS:
 cgroupDriver: systemd
 containerRuntimeEndpoint: "unix:///var/run/containerd/containerd.sock"
 podCIDR: ${POD_CIDR}
-resolvConf: "/etc/resolv.conf"
+resolvConf: "/run/systemd/resolve/resolv.conf"
 runtimeRequestTimeout: "15m"
 tlsCertFile: /var/lib/kubernetes/pki/${HOSTNAME}.crt
 tlsPrivateKeyFile: /var/lib/kubernetes/pki/${HOSTNAME}.key

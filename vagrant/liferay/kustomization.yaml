@@ -1,4 +1,5 @@
 resources:
+  - coredns.yaml
   - local-path-storage.yaml
   - search.yaml
   - database.yaml
