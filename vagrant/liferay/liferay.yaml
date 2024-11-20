@@ -58,33 +58,29 @@ spec:
         - name: LIFERAY_REDIRECT_PERIOD_URL_PERIOD_SECURITY_PERIOD_MODE
           value: "domain"
         - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_AUTODETECT_PERIOD_ADDRESS
-          value: ""
-        - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_LOGIC_PERIOD_NAME_PERIOD_CONTROL
-          value: "control-channel-liferay-1"
-        - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_LOGIC_PERIOD_NAME_PERIOD_TRANSPORT_PERIOD_NUMBER0
-          value: "transport-channel-logic-1"
-        - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_PROPERTIES_PERIOD_CONTROL
-          value: "/opt/liferay/cluster-link-tcp.xml"
-        - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_PROPERTIES_PERIOD_TRANSPORT_PERIOD__NUMBER0_
-          value: "/opt/liferay/cluster-link-tcp.xml"
+          value: "database:3306"
         - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_ENABLED
-          value: "false"
+          value: "true"
         - name: LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_CLUSTER_UPPERCASEN_AME
           value: "liferay_cluster"
         - name: LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_NETWORK_UPPERCASEH_OST_UPPERCASEA_DDRESSES
-          value: "search:9200"
+          value: "search.default.svc.cluster.local:9200"
         - name: LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_OPERATION_UPPERCASEM_ODE
           value: "REMOTE"
         - name: LIFERAY_CONFIGURATION_PERIOD_OVERRIDE_PERIOD_COM_PERIOD_LIFERAY_PERIOD_PORTAL_PERIOD_SEARCH_PERIOD_ELASTICSEARCH_NUMBER7__PERIOD_CONFIGURATION_PERIOD__UPPERCASEE_LASTICSEARCH_UPPERCASEC_ONFIGURATION_UNDERLINE_PRODUCTION_UPPERCASEM_ODE_UPPERCASEE_NABLED
           value: B"true"
         - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME
-          value: "org.mariadb.jdbc.Driver:"
+          value: "org.mariadb.jdbc.Driver"
         - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL
-          value: "jdbc:mysql://database/lportal?characterEncoding=UTF-8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&passwordCharacterEncoding=UTF-8&permitMysqlScheme&serverTimezone=GMT&useFastDateParsing=false&useUnicode=true"
+          value: "jdbc:mysql://database.default.svc.cluster.local/lportal?characterEncoding=UTF-8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&passwordCharacterEncoding=UTF-8&permitMysqlScheme&serverTimezone=GMT&useFastDateParsing=false&useUnicode=true"
         - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME
           value: "root"
         - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD
           value: ""
+        - name: LIFERAY_USERS_PERIOD_REMINDER_PERIOD_QUERIES_PERIOD_ENABLED
+          value: "false"
+        - name: "LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_VALID_PERIOD_HOSTS"
+          value: "*"
         image: liferay/portal:7.4.3.125-ga125
         resources:
           requests:
