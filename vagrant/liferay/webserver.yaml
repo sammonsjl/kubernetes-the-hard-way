@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-ingress
@@ -14,6 +14,9 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: liferay--cluster
-          servicePort: 8080
+            service:
+              name: liferay--cluster
+              port:
+                number: 8080
         path: /
+        pathType: Prefix

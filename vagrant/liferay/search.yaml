@@ -14,8 +14,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: search-claim
-  name: search-claim
+    app: esdata
+  name: esdata
 spec:
   accessModes:
   - ReadWriteOnce
@@ -57,7 +57,7 @@ spec:
           value: "false"
         - name: discovery.type
           value: single-node
-        image: liferaycloud/elasticsearch:8.15.1-5.3.2
+        image: liferaycloud/elasticsearch:7.17.23-5.3.2
         resources:
           limits:
             memory: "2024Mi"
@@ -66,10 +66,10 @@ spec:
         - containerPort: 9300
         name: search
         volumeMounts:
-        - mountPath: /lcp-container
-          name: search-data
+        - mountPath: /data
+          name: esdata
       restartPolicy: Always
       volumes:
-      - name: search-data
+      - name: esdata
         persistentVolumeClaim:
-          claimName: search-data
+          claimName: esdata

@@ -1,0 +1,5 @@
+resources:
+  - local-path-storage.yaml
+  - search.yaml
+  - database.yaml
+  - liferay.yaml

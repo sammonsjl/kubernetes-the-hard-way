@@ -15,8 +15,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: database-data
-  name: database-data
+    app: dbdata
+  name: dbdata
 spec:
   accessModes:
   - ReadWriteOnce
@@ -67,10 +67,10 @@ spec:
         name: database
         volumeMounts:
         - mountPath: /var/lib/mysql
-          name: database-data
+          name: dbdata
       restartPolicy: Always
       volumes:
-      - name: database-data
+      - name: dbdata
         persistentVolumeClaim:
-          claimName: database-data
+          claimName: dbdata
 

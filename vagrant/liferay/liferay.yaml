@@ -17,8 +17,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: liferay-data
-  name: liferay-data
+    app: lrdata
+  name: lrdata
 spec:
   accessModes:
   - ReadWriteOnce
@@ -72,7 +72,7 @@ spec:
           value: "true"
         - name: LIFERAY_REDIRECT_PERIOD_URL_PERIOD_SECURITY_PERIOD_MODE #La usaremos para permitir los redirect en el cluster
           value: "domain"
-        image: liferay/portal:7.3.1-ga2
+        image: liferay/portal:7.4.3.125-ga125
         resources:
           requests: #Recursos que se aprovisionan al memomento de arrancar el pod
             memory: "2048Mi"
@@ -101,14 +101,9 @@ spec:
           successThreshold: 1
         volumeMounts: # directorios donde se van a montar los volumenes
         - mountPath: /opt/liferay/data
-          name: liferay-data
-        - mountPath: /mnt/liferay
-          name: liferay-config
+          name: lrdata
       restartPolicy: Always #politica de reinicio ante errores en el contenedor
       volumes: # descripcion de los volumenes y pvc
-      - name: liferay-data
+      - name: lrdata
         persistentVolumeClaim:
-          claimName: liferay-data
-      - name: liferay-config
-        persistentVolumeClaim:
-          claimName: liferay-config
+          claimName: lrdata
