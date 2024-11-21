@@ -232,7 +232,7 @@ We configure it to operate as a [layer 4](https://en.wikipedia.org/wiki/Transpor
 ```bash
 cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
 frontend kubernetes
-    bind ${LOADBALANCER}:6443
+    bind 0.0.0.0:6443
     option tcplog
     mode tcp
     default_backend kubernetes-controlplane-nodes
