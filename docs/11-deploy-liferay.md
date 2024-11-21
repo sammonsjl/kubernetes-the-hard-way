@@ -25,7 +25,7 @@ kubectl create -f ~/infra/custom-resources.yaml
 
 [//]: # (host:controlplane01)
 
-Deploy the `coredns` cluster add-on:
+Deploy the `CoreDNS` cluster add-on:
 
 Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vi, then save) and apply that.
 
@@ -69,8 +69,6 @@ local-path-storage   local-path-provisioner-dbff48958-pbbk4     1/1     Running 
 tigera-operator      tigera-operator-b974bcbbb-jmwzs            1/1     Running     2 (126m ago)   6h2m
 ```
 
-Reference: https://kubernetes.io/docs/tasks/administer-cluster/coredns/#installing-coredns
-
 ## Liferay Deployment
 
 In this section you will verify the ability to create and manage [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/).
@@ -83,7 +81,7 @@ kubectl apply -k ~/liferay -n=liferay
 
 [//]: # (command:kubectl wait deployment -n default nginx --for condition=Available=True --timeout=90s)
 
-List the pod created by the deployment:
+List the pods created by the deployment:
 
 ```bash
 kubectl get pods -n liferay
@@ -101,6 +99,21 @@ Deploy Liferay by running the following:
 
 ```bash
 kubectl apply -f ~/liferay/liferay.yaml -n=liferay
+```
+
+List the pods created by the deployment:
+
+```bash
+kubectl get pods -n liferay
+```
+
+> output
+
+```
+NAME                        READY   STATUS    RESTARTS   AGE
+database-59cf69b794-gs78m   1/1     Running     0          115m
+liferay-6d6d777465-zndxs    1/1     Running     0          114m
+search-5bb7758db9-w7rkd     1/1     Running     0          115m
 ```
 
 ### Services
