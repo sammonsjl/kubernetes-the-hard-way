@@ -2,114 +2,141 @@
 
 In this lab you will complete a series of tasks to ensure your Kubernetes cluster is functioning correctly.
 
-```
+## Infrastructure Deployment
 
-## Deployments
+In this section serveral infrastructure components will be deployed to support deployment in the Kubernetes cluster.  
 
-In this section you will verify the ability to create and manage [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/).
+### Calico CNI
 
-Create a deployment for the [nginx](https://nginx.org/en/) web server:
+The Calico CNI plugin provides a container network infrastrucure provides a network for services to communicate with each other.  Once deployed the Kubernetes node state will switch to Ready indicating they are ready for deployment.
 
-```bash
-kubectl create deployment nginx --image=nginx:alpine
-```
+[//]: # (host:controlplane01)
 
-[//]: # (command:kubectl wait deployment -n default nginx --for condition=Available=True --timeout=90s)
+Deploy the `Calico` cluster add-on:
 
-List the pod created by the `nginx` deployment:
+Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vi, then save) and apply that.
 
 ```bash
-kubectl get pods -l app=nginx
+kubectl create -f ~/infra/tigera-operator.yaml 
+kubectl create -f ~/infra/custom-resources.yaml
+```
+
+### CoreDNS
+
+[//]: # (host:controlplane01)
+
+Deploy the `coredns` cluster add-on:
+
+Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vi, then save) and apply that.
+
+```bash
+kubectl apply -f ~/infra/coredns.yaml
+```
+
+### Local Path Storage
+
+Local Path storage provides a way to mount volumes in a local cluster for any services that need them.
+
+Deploy the `Local Path Storage` cluster add-on:
+
+```bash
+kubectl apply -f ~/infra/local-path-storage.yaml
+```
+
+### Verification
+
+Run the following to verify that the infrastructure components have been deploying properly:
+
+```bash
+kubectl get pods --all-namespaces
 ```
 
 > output
 
 ```
-NAME                    READY   STATUS    RESTARTS   AGE
-nginx-dbddb74b8-6lxg2   1/1     Running   0          10s
+NAMESPACE            NAME                                       READY   STATUS      RESTARTS       AGE
+calico-apiserver     calico-apiserver-b4676fc7b-xzrph           1/1     Running     2 (138m ago)   6h1m
+calico-apiserver     calico-apiserver-b4676fc7b-zvwrv           1/1     Running     2 (138m ago)   6h1m
+calico-system        calico-kube-controllers-7d868b8f66-mbnsk   1/1     Running     1 (139m ago)   6h2m
+calico-system        calico-node-5lv22                          1/1     Running     1 (139m ago)   6h2m
+calico-system        calico-node-hpwfm                          1/1     Running     1 (139m ago)   6h2m
+calico-system        calico-typha-6fc47c4db6-skb78              1/1     Running     1 (139m ago)   6h2m
+calico-system        csi-node-driver-2p8n9                      2/2     Running     2 (139m ago)   6h2m
+calico-system        csi-node-driver-847c8                      2/2     Running     2 (139m ago)   6h2m
+kube-system          coredns-f5799776f-4kv6s                    1/1     Running     2 (139m ago)   6h24m
+kube-system          coredns-f5799776f-fs7hm                    1/1     Running     2 (139m ago)   6h24m
+local-path-storage   local-path-provisioner-dbff48958-pbbk4     1/1     Running     3 (138m ago)   6h24m
+tigera-operator      tigera-operator-b974bcbbb-jmwzs            1/1     Running     2 (126m ago)   6h2m
+```
+
+Reference: https://kubernetes.io/docs/tasks/administer-cluster/coredns/#installing-coredns
+
+## Liferay Deployment
+
+In this section you will verify the ability to create and manage [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/).
+
+Deploy Liferay dependencies by running the following:
+
+```bash
+kubectl apply -k ~/liferay -n=liferay
+```
+
+[//]: # (command:kubectl wait deployment -n default nginx --for condition=Available=True --timeout=90s)
+
+List the pod created by the deployment:
+
+```bash
+kubectl get pods -n liferay
+```
+
+> output
+
+```
+NAME                        READY   STATUS    RESTARTS   AGE
+database-59cf69b794-w78vv   1/1     Running   0          2m19s
+search-5bb7758db9-5zk6c     1/1     Running   0          2m19s
+```
+
+Deploy Liferay by running the following:
+
+```bash
+kubectl apply -f ~/liferay/liferay.yaml -n=liferay
 ```
 
 ### Services
 
 In this section you will verify the ability to access applications remotely using [port forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/).
 
-Create a service to expose deployment nginx on node ports.
+Create a service to expose deployment liferay on node ports.
 
 ```bash
-kubectl expose deploy nginx --type=NodePort --port 80
+kubectl expose deploy liferay --type=NodePort --port 8080
 ```
+
+Find the port used to access the Liferay Service:
 
 [//]: # (command:sleep 2)
 
 ```bash
-PORT_NUMBER=$(kubectl get svc -l app=nginx -o jsonpath="{.items[0].spec.ports[0].nodePort}")
-```
-
-Test to view NGINX page
-
-```bash
-curl http://node01:$PORT_NUMBER
-curl http://node02:$PORT_NUMBER
+kubectl get service liferay
 ```
 
 > output
 
 ```
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
- # Output Truncated for brevity
-<body>
+NAME      TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+liferay   NodePort   10.96.236.85   <none>        8080:31759/TCP   51m
 ```
 
-### Logs
+From the host access the Liferay Service using the following:
 
-In this section you will verify the ability to [retrieve container logs](https://kubernetes.io/docs/concepts/cluster-administration/logging/).
+$NODE01 and $NODE02 are the IPs that were set for each node and $PORT_NUMBER is obtained from the output above.  For example:
 
-Retrieve the full name of the `nginx` pod:
+http://192.168.100.21:31759
+http://192.168.100.22:31759
 
 ```bash
-POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}")
+http://$NODE01:$PORT_NUMBER
+http://$NODE02:$PORT_NUMBER
 ```
-
-Print the `nginx` pod logs:
-
-```bash
-kubectl logs $POD_NAME
-```
-
-> output
-
-```
-10.32.0.1 - - [20/Mar/2019:10:08:30 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.58.0" "-"
-10.40.0.0 - - [20/Mar/2019:10:08:55 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.58.0" "-"
-```
-
-### Exec
-
-In this section you will verify the ability to [execute commands in a container](https://kubernetes.io/docs/tasks/debug-application-cluster/get-shell-running-container/#running-individual-commands-in-a-container).
-
-Print the nginx version by executing the `nginx -v` command in the `nginx` container:
-
-```bash
-kubectl exec -ti $POD_NAME -- nginx -v
-```
-
-> output
-
-```
-nginx version: nginx/1.23.1
-```
-
-Clean up test resources
-
-
-```bash
-kubectl delete pod -n default busybox
-kubectl delete service -n default nginx
-kubectl delete deployment -n default nginx
-```
-
-Next: [End to End Tests](./17-e2e-tests.md)</br>
 Prev: [DNS Addon](./15-dns-addon.md)
