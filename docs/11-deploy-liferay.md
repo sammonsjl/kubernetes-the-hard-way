@@ -132,8 +132,8 @@ From the host access the Liferay Service using the following:
 
 $NODE01 and $NODE02 are the IPs that were set for each node and $PORT_NUMBER is obtained from the output above.  For example:
 
-http://192.168.100.21:31759
-http://192.168.100.22:31759
+* http://192.168.100.21:31759
+* http://192.168.100.22:31759
 
 ```bash
 http://$NODE01:$PORT_NUMBER
