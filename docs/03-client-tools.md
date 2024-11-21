@@ -92,7 +92,6 @@ ls -loh downloads
 
 ```text
 total 561M
--rw-r--r--. 1 vagrant 51M Oct 15 09:37 cni-plugins-linux-amd64-v1.6.0.tgz
 -rw-r--r--. 1 vagrant 46M Oct 14 20:47 containerd-1.7.23-linux-amd64.tar.gz
 -rw-r--r--. 1 vagrant 18M Aug 13 10:48 crictl-v1.31.1-darwin-amd64.tar.gz
 -rw-r--r--. 1 vagrant 20M Sep 10 18:31 etcd-v3.5.16-linux-amd64.tar.gz

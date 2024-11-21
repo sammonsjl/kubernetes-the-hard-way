@@ -51,6 +51,7 @@ def provision_kubernetes_node(node)
   # Provide Kubernetes Config
   node.vm.provision "shell", inline: "ln -s /vagrant/configs /home/vagrant/configs"
   node.vm.provision "shell", inline: "ln -s /vagrant/downloads.txt /home/vagrant/downloads.txt"
+  node.vm.provision "shell", inline: "ln -s /vagrant/infra /home/vagrant/infra"
   node.vm.provision "shell", inline: "ln -s /vagrant/liferay /home/vagrant/liferay"
   node.vm.provision "shell", inline: "ln -s /vagrant/templates /home/vagrant/templates"
 end

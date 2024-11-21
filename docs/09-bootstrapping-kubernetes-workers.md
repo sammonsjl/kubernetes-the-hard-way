@@ -60,7 +60,6 @@ sudo mkdir -p \
   mkdir -p containerd
   tar -xvf crictl-v1.31.1-linux-amd64.tar.gz
   tar -xvf containerd-1.7.23-linux-amd64.tar.gz -C containerd
-  sudo tar -xvf cni-plugins-linux-amd64-v1.6.0.tgz -C /opt/cni/bin/
   mv runc.amd64 runc
   chmod +x crictl kubectl kube-proxy kubelet runc 
   sudo cp crictl kubectl kube-proxy kubelet runc /usr/local/bin/
@@ -83,19 +82,6 @@ Compute cluster DNS addess, which is conventionally .10 in the service CIDR rang
 
 ```bash
 export CLUSTER_DNS=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.10", $1, $2, $3) }')
-```
-
-### Configure CNI Networking
-
-Create the `bridge` network configuration file:
-
-```bash
-envsubst < templates/10-bridge.conf.template \
-| sudo tee /etc/cni/net.d/10-bridge.conf
-```
-
-```bash
-sudo cp configs/99-loopback.conf /etc/cni/net.d/
 ```
 
 ### Configure containerd
