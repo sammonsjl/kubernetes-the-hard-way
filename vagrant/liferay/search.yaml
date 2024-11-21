@@ -4,7 +4,7 @@ metadata:
   name: search
 spec:
   ports:
-  - port: 9300
+  - port: 9200
   selector:
     app: search
   
@@ -63,7 +63,7 @@ spec:
             memory: "2024Mi"
             cpu: "2"
         ports:
-        - containerPort: 9300
+        - containerPort: 9200
         name: search
         volumeMounts:
         - mountPath: /data
