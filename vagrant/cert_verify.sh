@@ -220,7 +220,7 @@ check_kubeconfig()
     key=$(get_kubeconfig_cert_path $kubeconfig "client-key")
     server=$(sudo cat $kubeconfig | grep server | awk '{print $2}')
 
-    if [ -f "$ca"]
+    if [ -f "$ca" ]
     then
         printf "${SUCCESS}Path to CA certificate is correct${NC}\n"
     else
@@ -228,7 +228,7 @@ check_kubeconfig()
         exit 1
     fi
 
-    if [ -f "$cert"]
+    if [ -f "$cert" ]
     then
         printf "${SUCCESS}Path to client certificate is correct${NC}\n"
     else
@@ -236,7 +236,7 @@ check_kubeconfig()
         exit 1
     fi
 
-    if [ -f "$key"]
+    if [ -f "$key" ]
     then
         printf "${SUCCESS}Path to client key is correct${NC}\n"
     else
