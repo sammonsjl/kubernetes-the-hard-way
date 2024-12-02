@@ -43,7 +43,7 @@ echo $SERVICE_CIDR
 echo $API_SERVICE
 ```
 
-The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ. The first 3 addresses will also be different for Apple Silicon on Multipass (likely 192.168.64.x).
+The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ.
 
 ```
 192.168.56.11
@@ -172,9 +172,9 @@ done
 }
 ```
 
-## Optional - Check Certificates on controlplane02
+## Optional - Check Certificates on controlplane02 and controlplane03
 
-At `controlplane02` node run the following, selecting option 1
+Run the following on `controlplane02` and `controlplane03`, selecting option 1
 
 [//]: # (commandssh controlplane02 './cert_verify.sh 1')
 
