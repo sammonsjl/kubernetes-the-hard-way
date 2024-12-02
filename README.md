@@ -15,8 +15,8 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 
 * [kubernetes](https://github.com/kubernetes/kubernetes) v1.31.2
 * [etcd](https://github.com/etcd-io/etcd) v3.5.16
-* [containerd](https://github.com/containerd/containerd) v1.7.23]
-* [calico-cni](https://projectcalico.docs.tigera.io/)
+* [containerd](https://github.com/containerd/containerd) v1.7.23
+* [calico-cni](https://doc.tigera.io/calico/latest/about) v3.29
 * [coredns](https://github.com/coredns/coredns) v1.9.4
 
 ### Node configuration
