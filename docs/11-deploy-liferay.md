@@ -8,13 +8,13 @@ In this section several infrastructure components will be deployed to support de
 
 ### Calico CNI
 
-The Calico CNI plugin provides a container network infrastructure provides a network for services to communicate with each other.  Once deployed the Kubernetes node state will switch to Ready indicating they are ready for deployment.
+The Calico CNI plugin provides a container network infrastructure to allow services to communicate with each other.  Once deployed the Kubernetes node state will switch to Ready indicating they are ready for deployment.
 
 [//]: # (host:controlplane01)
 
 Deploy the `Calico` cluster add-on:
 
-Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vi, then save) and apply that.
+Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vim, then save) and apply that.
 
 ```bash
 kubectl create -f ~/infra/tigera-operator.yaml 
@@ -27,7 +27,7 @@ kubectl create -f ~/infra/custom-resources.yaml
 
 Deploy the `CoreDNS` cluster add-on:
 
-Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vi, then save) and apply that.
+Note that if you have [changed the service CIDR range](./01-prerequisites.md#service-network) and thus this file, you will need to save your copy onto `controlplane01` (paste to vim, then save) and apply that.
 
 ```bash
 kubectl apply -f ~/infra/coredns.yaml
@@ -68,6 +68,22 @@ kube-system          coredns-f5799776f-fs7hm                    1/1     Running 
 local-path-storage   local-path-provisioner-dbff48958-pbbk4     1/1     Running     3 (138m ago)   6h24m
 tigera-operator      tigera-operator-b974bcbbb-jmwzs            1/1     Running     2 (126m ago)   6h2m
 ```
+
+List the nodes in the remote Kubernetes cluster:
+
+```bash
+kubectl get nodes
+```
+
+> output
+
+```
+NAME       STATUS      ROLES    AGE    VERSION
+node01     Ready       <none>   118s   v1.28.4
+node02     Ready       <none>   118s   v1.28.4
+```
+
+The nodes should now be in a ready status since the Calico CNI plugin provides service to service networking which is needed for the nodes to function.
 
 ## Liferay Deployment
 
@@ -143,7 +159,7 @@ liferay   NodePort   10.96.236.85   <none>        8080:31759/TCP   51m
 
 From the host access the Liferay Service using the following:
 
-$NODE01 and $NODE02 are the IPs that were set for each node and $PORT_NUMBER is obtained from the output above.  For example:
+`$NODE01` and `$NODE02` are the IPs that were set for each node and `$PORT_NUMBER` is obtained from the output above.  For example:
 
 * http://192.168.100.21:31759
 * http://192.168.100.22:31759
@@ -152,4 +168,4 @@ $NODE01 and $NODE02 are the IPs that were set for each node and $PORT_NUMBER is 
 http://$NODE01:$PORT_NUMBER
 http://$NODE02:$PORT_NUMBER
 ```
-Prev: [DNS Addon](./15-dns-addon.md)
+Prev: [Configuring kubectl for Remote Access](./10-configuring-kubectl.md)

@@ -541,9 +541,9 @@ case $choice in
     ;;
 
   4)
-    if ! [ "${HOST}" = "node01" ]
+    if ! [ "${HOST}" = "node01" -o "${HOST}" = "node02" ]
     then
-        printf "${FAILED}Must run on node01${NC}\n"
+        printf "${FAILED}Must run on node01 or node02${NC}\n"
         exit 1
     fi
 
@@ -554,23 +554,6 @@ case $choice in
     check_kubeconfig "kube-proxy" "/var/lib/kube-proxy" "https://${LOADBALANCER}:6443"
     check_kubeconfig "kubelet" "/var/lib/kubelet" "https://${LOADBALANCER}:6443"
     ;;
-
-  5)
-    if ! [ "${HOST}" = "node02" ]
-    then
-        printf "${FAILED}Must run on node02${NC}\n"
-        exit 1
-    fi
-
-    CERT_LOCATION=/var/lib/kubernetes/pki
-    check_cert_only "ca" $SUBJ_CA $CERT_ISSUER
-    check_cert_and_key "kube-proxy" $SUBJ_KP $CERT_ISSUER
-
-    CERT_LOCATION=/var/lib/kubelet/pki
-    check_cert_only "kubelet-client-current" "Subject:O=system:nodes,CN=system:node:node02" $CERT_ISSUER
-    check_kubeconfig "kube-proxy" "/var/lib/kube-proxy" "https://${LOADBALANCER}:6443"
-    ;;
-
 
   *)
     printf "${FAILED}Exiting.... Please select the valid option either 1 or 2\n${NC}"

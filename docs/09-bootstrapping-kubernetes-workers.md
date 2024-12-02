@@ -1,7 +1,6 @@
 # Bootstrapping the Kubernetes Worker Nodes
 
-In this lab you will bootstrap two Kubernetes worker nodes. The following components will be installed: [runc](https://github.com/opencontainers/runc), [container networking plugins](https://github.com/containernetworking/cni), [containerd](https://github.com/containerd/containerd), [kubelet](https://kubernetes.io/docs/admin/kubelet), and [kube-proxy](https://kubernetes.io/docs/concepts/cluster-administration/proxies).
-
+In this lab you will bootstrap two Kubernetes worker nodes. The following components will be installed: [runc](https://github.com/opencontainers/runc), [containerd](https://github.com/containerd/containerd), [kubelet](https://kubernetes.io/docs/admin/kubelet), and [kube-proxy](https://kubernetes.io/docs/concepts/cluster-administration/proxies).
 
 ## Prerequisites
 
@@ -45,8 +44,6 @@ sudo swapoff -a
 
 ```bash
 sudo mkdir -p \
-  /etc/cni/net.d \
-  /opt/cni/bin \
   /var/lib/kubelet \
   /var/lib/kube-proxy \
   /var/lib/kubernetes/pki \
@@ -78,7 +75,7 @@ export POD_CIDR=10.244.0.0/16
 export SERVICE_CIDR=10.96.0.0/16
 ```
 
-Compute cluster DNS addess, which is conventionally .10 in the service CIDR range
+Compute cluster DNS address, which is conventionally .10 in the service CIDR range
 
 ```bash
 export CLUSTER_DNS=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.10", $1, $2, $3) }')
@@ -167,12 +164,12 @@ node01     NotReady   <none>   93s   v1.28.4
 node02     NotReady   <none>   93s   v1.28.4
 ```
 
-The node is not ready as we have not yet installed pod networking. This comes later.
+The nodes are not ready as we have not yet installed pod networking. This comes later.
 
 
 ## Optional - Check Certificates and kubeconfigs
 
-ON `node01` node, run the following, selecting option 4
+On `node01` and `node02` nodes, run the following, selecting option 4
 
 [//]: # (command:./cert_verify.sh 4)
 
@@ -180,5 +177,5 @@ ON `node01` node, run the following, selecting option 4
 ./cert_verify.sh
 ```
 
-Next: [TLS Bootstrapping Kubernetes Workers](./11-tls-bootstrapping-kubernetes-workers.md)<br>
-Prev: [Installing CRI on the Kubernetes Worker Nodes](./09-install-cri-workers.md)
+Next: [Configuring kubectl for Remote Access](./10-configuring-kubectl.md)<br>
+Prev: [Bootstrapping the Kubernetes Control Plane](./08-bootstrapping-kubernetes-controllers.md)

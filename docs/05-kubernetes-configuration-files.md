@@ -14,7 +14,7 @@ LOADBALANCER=$(dig +short loadbalancer)
 
 ### The kubelet Kubernetes Configuration File
 
-When generating kubeconfig files for Kubelets the client certificate matching the Kubelet's node name must be used. This will ensure Kubelets are properly authorized by the Kubernetes [Node Authorizer](https://kubernetes.io/docs/admin/authorization/node/).
+When generating kubeconfig files for Kubelets the client certificate matching the Kubelets node name must be used. This will ensure Kubelets are properly authorized by the Kubernetes [Node Authorizer](https://kubernetes.io/docs/admin/authorization/node/).
 
 Generate a kubeconfig file for worker node01 and node02:
 
@@ -181,8 +181,6 @@ admin.kubeconfig
 
 Reference docs for kubeconfig [here](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
 
-##
-
 ## Distribute the Kubernetes Configuration Files
 
 Copy the appropriate `kube-proxy` kubeconfig files to each worker instance:
@@ -211,7 +209,6 @@ At `controlplane01`, `controlplane02` and `controlplane03` nodes, run the follow
 ```
 ./cert_verify.sh
 ```
-
 
 Next: [Generating the Data Encryption Config and Key](./06-data-encryption-keys.md)<br>
 Prev: [Certificate Authority](./04-certificate-authority.md)

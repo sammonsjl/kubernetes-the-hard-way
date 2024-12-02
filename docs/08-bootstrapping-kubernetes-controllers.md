@@ -9,7 +9,7 @@ If you examine the command line arguments passed to the various control plane co
 
 ## Prerequisites
 
-The commands in this lab up as far as the RBAC configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`. Login to each controller instance using vagrant ssh terminal.
+The commands in this lab up as far as the RBAC configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`.
 
 You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 
@@ -40,7 +40,6 @@ Install the Kubernetes binaries:
     cd ~
 }
 ```
-
 
 ### Configure the Kubernetes API Server
 
@@ -225,7 +224,7 @@ CONTROL03=$(dig +short controlplane03)
 LOADBALANCER=$(dig +short loadbalancer)
 ```
 
-Create HAProxy configuration to listen on API server port on this host and distribute requests evently to the two controlplane nodes.
+Create HAProxy configuration to listen on API server port on this host and distribute requests evenly to the two controlplane nodes.
 
 We configure it to operate as a [layer 4](https://en.wikipedia.org/wiki/Transport_layer) loadbalancer (using `mode tcp`), which means it forwards any traffic directly to the backends without doing anything like [SSL offloading](https://ssl2buy.com/wiki/ssl-offloading).
 
@@ -257,7 +256,7 @@ sudo systemctl start haproxy
 
 [//]: # (sleep:2)
 
-Make a HTTP request for the Kubernetes version info:
+Make an HTTP request for the Kubernetes version info:
 
 ```bash
 curl -k https://${LOADBALANCER}:6443/version
@@ -265,5 +264,5 @@ curl -k https://${LOADBALANCER}:6443/version
 
 This should output some details about the version and build information of the API server.
 
-Next: [Installing CRI on the Kubernetes Worker Nodes](./09-install-cri-workers.md)<br>
+Next: [Bootstrapping the Kubernetes Worker Nodes](./09-bootstrapping-kubernetes-workers.md)<br>
 Prev: [Bootstrapping the etcd Cluster](./07-bootstrapping-etcd.md)

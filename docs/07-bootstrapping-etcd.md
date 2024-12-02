@@ -16,10 +16,7 @@ The commands in this lab must be run on each controller instance: `controlplane0
 
 ### Install the etcd Binaries
 
-Download the official etcd release binaries from the [etcd](https://github.com/etcd-io/etcd) GitHub project:
-
 [//]: # (host:controlplane01-controlplane02-controlplane03)
-
 
 Extract and install the `etcd` server and the `etcdctl` command line utility:
 
