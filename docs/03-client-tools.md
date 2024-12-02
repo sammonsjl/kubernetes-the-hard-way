@@ -4,7 +4,7 @@ Begin by logging into `controlplane01` using `vagrant ssh` for KVM.
 
 ## Access all VMs
 
-Here we create an SSH key pair for the user who we are logged in as. We will copy the public key of this pair to the other controlplanes and both workers to permit us to use password-less SSH (and SCP) go get from `controlplane01` to these other nodes in the context of the user which exists on all nodes.
+Here we create an SSH key pair for the user who we are logged in as. We will copy the public key of this pair to the other controlplane nodes and both workers to permit us to use password-less SSH (and SCP) go get from `controlplane01` to these other nodes in the context of the user which exists on all nodes.
 
 Generate SSH key pair on `controlplane01` node:
 
@@ -22,12 +22,11 @@ Add this key to the local `authorized_keys` (`controlplane01`) as in some comman
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 ```
 
-Copy the key to the other hosts. You will be asked to enter a password for each of the `ssh-copy-id` commands. The password is:
-* KVM - `vagrant`
+Copy the key to the other hosts. You will be asked to enter a password for each of the `ssh-copy-id` commands. The password is: `vagrant`
 
 The option `-o StrictHostKeyChecking=no` tells it not to ask if you want to connect to a previously unknown host. Not best practice in the real world, but speeds things up here.
 
-`$(whoami)` selects the appropriate user name to connect to the remote VMs. On KVM this evaluates to `vagrant`
+`$(whoami)` selects the appropriate username to connect to the remote VMs. On KVM this evaluates to `vagrant`
 
 ```bash
 ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@controlplane02
@@ -35,13 +34,11 @@ ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@controlplane03
 ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@loadbalancer
 ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@node01
 ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@node02
+
 ```
-
-
-
 For each host, the output should be similar to this. If it is not, then you may have entered an incorrect password. Retry the step.
-
 ```
+
 Number of key(s) added: 1
 ```
 
@@ -114,7 +111,7 @@ done
 
 ## Install kubectl
 
-The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl) command line utility is used to interact with the Kubernetes API Server. Download and install `kubectl` from the official release binaries:
+The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl) command line utility is used to interact with the Kubernetes API Server. Install `kubectl` from the official release binaries:
 
 Reference: [https://kubernetes.io/docs/tasks/tools/install-kubectl/](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
