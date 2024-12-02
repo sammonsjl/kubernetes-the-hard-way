@@ -5,7 +5,7 @@
 # Larger nodes will be created if you have more.
 RAM_SIZE = 32
 
-# Define how mnay CPU cores you have.
+# Define how many CPU cores you have.
 # More powerful workers will be created if you have more
 CPU_CORES = 8
 
@@ -17,7 +17,7 @@ IP_NW = "192.168.100."
 # based on RAM/CPU
 ram_selector = (RAM_SIZE / 4) * 4
 if ram_selector < 8
-  raise "Unsufficient memory #{RAM_SIZE}GB. min 8GB"
+  raise "Insufficient memory #{RAM_SIZE}GB. min 8GB"
 end
 RESOURCES = {
   "control" => {
@@ -40,7 +40,7 @@ RESOURCES = {
 
 # Runs provisioning steps that are required by masters and workers
 def provision_kubernetes_node(node)
-  # Set up kernel parameters, modules and tunables
+  # Set up kernel parameters, modules and tuning
   node.vm.provision "setup-kernel", :type => "shell", :path => "fedora/setup-kernel.sh"
   # Set up ssh
   node.vm.provision "setup-ssh", :type => "shell", :path => "fedora/ssh.sh"
