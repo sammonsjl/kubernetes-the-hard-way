@@ -23,8 +23,7 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 
 We will be building the following:
 
-* Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`) running the control plane 
-  components as operating system services. 
+* Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`) running the control plane components as operating system services. 
 * Two worker nodes (`node01` and `node02`)
 * One loadbalancer VM running [HAProxy](https://www.haproxy.org/) to balance requests between the three API servers and provide the endpoint for your KUBECONFIG.
 
