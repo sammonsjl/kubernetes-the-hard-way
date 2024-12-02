@@ -16,7 +16,7 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 * [kubernetes](https://github.com/kubernetes/kubernetes) v1.31.2
 * [etcd](https://github.com/etcd-io/etcd) v3.5.16
 * [containerd](https://github.com/containerd/containerd) v1.7.23]
-* [calico](https://projectcalico.docs.tigera.io/)
+* [calico-cni](https://projectcalico.docs.tigera.io/)
 * [coredns](https://github.com/coredns/coredns) v1.9.4
 
 ### Node configuration
@@ -24,13 +24,11 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 We will be building the following:
 
 * Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`) running the control plane 
-  components as operating system services. This is not a kubeadm cluster as you are used to if you have been doing the CKA course. The control planes are *not* themselves nodes, therefore will not show with `kubectl get nodes`.
+  components as operating system services. 
 * Two worker nodes (`node01` and `node02`)
-* One loadbalancer VM running [HAProxy](https://www.haproxy.org/) to balance requests between the two API servers and provide the endpoint for your KUBECONFIG.
+* One loadbalancer VM running [HAProxy](https://www.haproxy.org/) to balance requests between the three API servers and provide the endpoint for your KUBECONFIG.
 
 ## Labs
-
-This tutorial requires four (4) ARM64 based virtual or physical machines connected to the same network. While ARM64 based machines are used for the tutorial, the lessons learned can be applied to other platforms.
 
 * [Prerequisites](docs/01-prerequisites.md)
 * [Provisioning Compute Resources](docs/02-compute-resources.md)
