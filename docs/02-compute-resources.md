@@ -34,14 +34,14 @@ This does the below:
 
 - Set's IP addresses in the range `192.168.100.x`
 
-    | VM            |  VM Name               | Purpose       | IP            | Forwarded Port   | RAM  |
-    | ------------  | ---------------------- |:-------------:| -------------:| ----------------:|-----:|
-    | controlplane01      | kubernetes-ha-controlplane01 | Master        | 192.168.100.11 |     2711         | 2048 |
-    | controlplane02      | kubernetes-ha-controlplane02 | Master        | 192.168.100.12 |     2712         | 1024 |
-    | controlplane03      | kubernetes-ha-controlplane03 | Master        | 192.168.100.13 |     2713         | 1024 |
-    | node01      | kubernetes-ha-node01 | Worker        | 192.168.100.21 |     2721         | 512  |
-    | node02      | kubernetes-ha-node02 | Worker        | 192.168.100.22 |     2722         | 1024 |
-    | loadbalancer  | kubernetes-ha-lb       | LoadBalancer  | 192.168.100.30 |     2730         | 1024 |
+    | VM             | VM Name                      |   Purpose    |             IP | Forwarded Port |  RAM |
+    |----------------|------------------------------|:------------:|---------------:|---------------:|-----:|
+    | controlplane01 | kubernetes-ha-controlplane01 |    Master    | 192.168.100.11 |           2711 | 2048 |
+    | controlplane02 | kubernetes-ha-controlplane02 |    Master    | 192.168.100.12 |           2712 | 1024 |
+    | controlplane03 | kubernetes-ha-controlplane03 |    Master    | 192.168.100.13 |           2713 | 1024 |
+    | node01         | kubernetes-ha-node01         |    Worker    | 192.168.100.21 |           2721 |  512 |
+    | node02         | kubernetes-ha-node02         |    Worker    | 192.168.100.22 |           2722 | 1024 |
+    | loadbalancer   | kubernetes-ha-lb             | LoadBalancer | 192.168.100.30 |           2730 | 1024 |
 
     > These are the default settings. These can be changed in the Vagrant file
 

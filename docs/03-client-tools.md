@@ -16,7 +16,7 @@ ssh-keygen -t rsa
 
 Leave all settings to default by pressing `ENTER` at any prompt.
 
-Add this key to the local `authorized_keys` (`controlplane01`) as in some commands we `scp` to ourself.
+Add this key to the local `authorized_keys` (`controlplane01`) as in some commands we `scp` to ourselves.
 
 ```bash
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys

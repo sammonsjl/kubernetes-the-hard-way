@@ -4,11 +4,11 @@ In this lab you will complete a series of tasks to ensure your Kubernetes cluste
 
 ## Infrastructure Deployment
 
-In this section serveral infrastructure components will be deployed to support deployment in the Kubernetes cluster.  
+In this section several infrastructure components will be deployed to support deployment in the Kubernetes cluster.  
 
 ### Calico CNI
 
-The Calico CNI plugin provides a container network infrastrucure provides a network for services to communicate with each other.  Once deployed the Kubernetes node state will switch to Ready indicating they are ready for deployment.
+The Calico CNI plugin provides a container network infrastructure provides a network for services to communicate with each other.  Once deployed the Kubernetes node state will switch to Ready indicating they are ready for deployment.
 
 [//]: # (host:controlplane01)
 
