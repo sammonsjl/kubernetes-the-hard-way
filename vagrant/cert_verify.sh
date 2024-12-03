@@ -8,9 +8,10 @@ FAILED='\033[0;31;1m'
 NC='\033[0m'
 
 # IP addresses
-PRIMARY_IP=$(ip addr show enp0s8 | grep "inet " | awk '{print $2}' | cut -d / -f 1)
+PRIMARY_IP="$(ip -4 addr show | grep "inet" | grep -E -v '(dynamic|127\.0\.0)' | awk '{print $2}' | cut -d/ -f1)"
 CONTROL01=$(dig +short controlplane01)
 CONTROL02=$(dig +short controlplane02)
+CONTROL03=$(dig +short controlplane03)
 NODE01=$(dig +short node01)
 NODE02=$(dig +short node02)
 LOADBALANCER=$(dig +short loadbalancer)
@@ -219,7 +220,7 @@ check_kubeconfig()
     key=$(get_kubeconfig_cert_path $kubeconfig "client-key")
     server=$(sudo cat $kubeconfig | grep server | awk '{print $2}')
 
-    if [ -f "$ca"]
+    if [ -f "$ca" ]
     then
         printf "${SUCCESS}Path to CA certificate is correct${NC}\n"
     else
@@ -227,7 +228,7 @@ check_kubeconfig()
         exit 1
     fi
 
-    if [ -f "$cert"]
+    if [ -f "$cert" ]
     then
         printf "${SUCCESS}Path to client certificate is correct${NC}\n"
     else
@@ -235,7 +236,7 @@ check_kubeconfig()
         exit 1
     fi
 
-    if [ -f "$key"]
+    if [ -f "$key" ]
     then
         printf "${SUCCESS}Path to client key is correct${NC}\n"
     else
@@ -469,9 +470,9 @@ SUBJ_APIKC="Subject:CN=kube-apiserver-kubelet-client,O=system:masters"
 case $choice in
 
   1)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
@@ -494,9 +495,9 @@ case $choice in
     ;;
 
   2)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
@@ -511,9 +512,9 @@ case $choice in
     ;;
 
   3)
-    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" ]
+    if ! [ "${HOST}" = "controlplane01" -o "${HOST}" = "controlplane02" -o "${HOST}" = "controlplane03" ]
     then
-        printf "${FAILED}Must run on controlplane01 or controlplane02${NC}\n"
+        printf "${FAILED}Must run on controlplane01 or controlplane02 or controlplane03${NC}\n"
         exit 1
     fi
 
@@ -540,9 +541,9 @@ case $choice in
     ;;
 
   4)
-    if ! [ "${HOST}" = "node01" ]
+    if ! [ "${HOST}" = "node01" -o "${HOST}" = "node02" ]
     then
-        printf "${FAILED}Must run on node01${NC}\n"
+        printf "${FAILED}Must run on node01 or node02${NC}\n"
         exit 1
     fi
 
@@ -553,23 +554,6 @@ case $choice in
     check_kubeconfig "kube-proxy" "/var/lib/kube-proxy" "https://${LOADBALANCER}:6443"
     check_kubeconfig "kubelet" "/var/lib/kubelet" "https://${LOADBALANCER}:6443"
     ;;
-
-  5)
-    if ! [ "${HOST}" = "node02" ]
-    then
-        printf "${FAILED}Must run on node02${NC}\n"
-        exit 1
-    fi
-
-    CERT_LOCATION=/var/lib/kubernetes/pki
-    check_cert_only "ca" $SUBJ_CA $CERT_ISSUER
-    check_cert_and_key "kube-proxy" $SUBJ_KP $CERT_ISSUER
-
-    CERT_LOCATION=/var/lib/kubelet/pki
-    check_cert_only "kubelet-client-current" "Subject:O=system:nodes,CN=system:node:node02" $CERT_ISSUER
-    check_kubeconfig "kube-proxy" "/var/lib/kube-proxy" "https://${LOADBALANCER}:6443"
-    ;;
-
 
   *)
     printf "${FAILED}Exiting.... Please select the valid option either 1 or 2\n${NC}"
