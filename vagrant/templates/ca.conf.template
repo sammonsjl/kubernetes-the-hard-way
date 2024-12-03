@@ -1,0 +1,229 @@
+[req]
+distinguished_name = req_distinguished_name
+prompt             = no
+x509_extensions    = ca_x509_extensions
+
+[ca_x509_extensions]
+basicConstraints = CA:TRUE
+keyUsage         = cRLSign, keyCertSign
+
+[req_distinguished_name]
+CN  = KUBERNETES-CA
+O = Kubernetes
+
+[admin]
+distinguished_name = admin_distinguished_name
+prompt             = no
+req_extensions     = default_req_extensions
+
+[admin_distinguished_name]
+CN = admin
+O  = system:masters
+
+# Service Accounts
+#
+# The Kubernetes Controller Manager leverages a key pair to generate
+# and sign service account tokens as described in the
+# [managing service accounts](https://kubernetes.io/docs/admin/service-accounts-admin/)
+# documentation.
+
+[service-account]
+distinguished_name = service-accounts_distinguished_name
+prompt             = no
+req_extensions     = default_req_extensions
+
+[service-accounts_distinguished_name]
+CN = service-accounts
+O = Kubernetes
+
+# Worker Nodes
+#
+# Kubernetes uses a [special-purpose authorization mode](https://kubernetes.io/docs/admin/authorization/node/)
+# called Node Authorizer, that specifically authorizes API requests made
+# by [Kubelets](https://kubernetes.io/docs/concepts/overview/components/#kubelet).
+# In order to be authorized by the Node Authorizer, Kubelets must use a credential
+# that identifies them as being in the `system:nodes` group, with a username
+# of `system:node:<nodeName>`.
+
+[node01]
+distinguished_name = node01_distinguished_name
+prompt             = no
+req_extensions     = node01_req_extensions
+
+[node01_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Node01 Certificate"
+subjectAltName       = DNS:node01, IP:127.0.0.1
+subjectKeyIdentifier = hash
+
+[node01_distinguished_name]
+CN = system:node:node01
+O = system:nodes
+
+[node02]
+distinguished_name = node02_distinguished_name
+prompt             = no
+req_extensions     = node02_req_extensions
+
+[node02_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Node02 Certificate"
+subjectAltName       = DNS:node02, IP:127.0.0.1
+subjectKeyIdentifier = hash
+
+[node02_distinguished_name]
+CN = system:node:node02
+O = system:nodes
+
+# Kube Proxy Section
+[kube-proxy]
+distinguished_name = kube-proxy_distinguished_name
+prompt             = no
+req_extensions     = kube-proxy_req_extensions
+
+[kube-proxy_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Kube Proxy Certificate"
+subjectAltName       = DNS:kube-proxy, IP:127.0.0.1
+subjectKeyIdentifier = hash
+
+[kube-proxy_distinguished_name]
+CN = system:kube-proxy
+O = system:node-proxier
+
+# Controller Manager
+[kube-controller-manager]
+distinguished_name = kube-controller-manager_distinguished_name
+prompt             = no
+req_extensions     = kube-controller-manager_req_extensions
+
+[kube-controller-manager_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Kube Controller Manager Certificate"
+subjectAltName       = DNS:kube-proxy, IP:127.0.0.1
+subjectKeyIdentifier = hash
+
+[kube-controller-manager_distinguished_name]
+CN = system:kube-controller-manager
+O = system:kube-controller-manager
+
+# Scheduler
+[kube-scheduler]
+distinguished_name = kube-scheduler_distinguished_name
+prompt             = no
+req_extensions     = kube-scheduler_req_extensions
+
+[kube-scheduler_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Kube Scheduler Certificate"
+subjectAltName       = DNS:kube-scheduler, IP:127.0.0.1
+subjectKeyIdentifier = hash
+
+[kube-scheduler_distinguished_name]
+CN = system:kube-scheduler
+O = system:kube-scheduler
+
+# API Server
+#
+# The Kubernetes API server is automatically assigned the `kubernetes`
+# internal dns name, which will be linked to the first IP address (`10.32.0.1`)
+# from the address range (`10.32.0.0/24`) reserved for internal cluster
+# services.
+
+[kube-apiserver]
+distinguished_name = kube-apiserver_distinguished_name
+prompt             = no
+req_extensions     = kube-apiserver_req_extensions
+
+[kube-apiserver_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Kube API Server Certificate"
+subjectAltName       = @kube-apiserver_alt_names
+subjectKeyIdentifier = hash
+
+[kube-apiserver_alt_names]
+IP.0 = 127.0.0.1
+IP.1 = ${API_SERVICE}
+IP.2 = ${CONTROL01}
+IP.3 = ${CONTROL02}
+IP.4 = ${CONTROL03}
+IP.5 = ${LOADBALANCER}
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster
+DNS.5 = kubernetes.default.svc.cluster.local
+
+[kube-apiserver_distinguished_name]
+CN = kube-apiserver
+O = Kubernetes
+
+# API Server Kubelet Client
+[apiserver-kubelet-client]
+distinguished_name = apiserver-kubelet-client_distinguished_name
+prompt             = no
+req_extensions     = apiserver-kubelet-client_req_extensions
+
+[apiserver-kubelet-client_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "API Server Kubelet Client Certificate"
+subjectKeyIdentifier = hash
+
+[apiserver-kubelet-client_distinguished_name]
+CN = kube-apiserver-kubelet-client
+O = system:masters
+
+# etcd
+[etcd-server]
+distinguished_name = etcd-server_distinguished_name
+prompt             = no
+req_extensions     = etcd-server_req_extensions
+
+[etcd-server_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth, serverAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "etcd Certificate"
+subjectAltName       = @etcd-server_alt_names
+subjectKeyIdentifier = hash
+
+[etcd-server_alt_names]
+IP.0 = 127.0.0.1
+IP.1 = ${CONTROL01}
+IP.2 = ${CONTROL02}
+IP.3 = ${CONTROL03}
+DNS.0 = localhost
+
+[etcd-server_distinguished_name]
+CN = etcd-server
+O = Kubernetes
+
+[default_req_extensions]
+basicConstraints     = CA:FALSE
+extendedKeyUsage     = clientAuth
+keyUsage             = critical, digitalSignature, keyEncipherment
+nsCertType           = client
+nsComment            = "Admin Client Certificate"
+subjectKeyIdentifier = hash
