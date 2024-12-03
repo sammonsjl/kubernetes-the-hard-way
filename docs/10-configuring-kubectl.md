@@ -54,11 +54,10 @@ Output will be similar to this. It may or may not list both etcd instances, howe
 
 ```
 Warning: v1 ComponentStatus is deprecated in v1.19+
-NAME                 STATUS    MESSAGE             ERROR
-controller-manager   Healthy   ok
-scheduler            Healthy   ok
-etcd-1               Healthy   {"health":"true"}
-etcd-0               Healthy   {"health":"true"}
+NAME                 STATUS    MESSAGE   ERROR
+controller-manager   Healthy   ok        
+scheduler            Healthy   ok        
+etcd-0               Healthy   ok  
 ```
 
 List the nodes in the remote Kubernetes cluster:
@@ -75,5 +74,7 @@ node01     NotReady    <none>   118s   v1.28.4
 node02     NotReady    <none>   118s   v1.28.4
 ```
 
-Next: [Deploy Pod Networking](./13-configure-pod-networking.md)</br>
-Prev: [TLS Bootstrapping Kubernetes Workers](./11-tls-bootstrapping-kubernetes-workers.md)
+The nodes are not ready as we have not yet installed pod networking. This comes later.
+
+Next: [Deploy Liferay](./11-deploy-liferay.md)</br>
+Prev: [Bootstrapping the Kubernetes Worker Nodes](./09-bootstrapping-kubernetes-workers.md)
