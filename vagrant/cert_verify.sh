@@ -443,8 +443,7 @@ else
         echo "  1. Verify certificates on Master Nodes after step 4"
         echo "  2. Verify kubeconfigs on Master Nodes after step 5"
         echo "  3. Verify kubeconfigs and PKI on Master Nodes after step 8"
-        echo "  4. Verify kubeconfigs and PKI on node01 Node after step 10"
-        echo "  5. Verify kubeconfigs and PKI on node02 Node after step 11"
+        echo "  4. Verify kubeconfigs and PKI on Worker Nodes after step 10"
         echo
         echo -n "Please select one of the above options: "
         read choice
@@ -550,7 +549,7 @@ case $choice in
     CERT_LOCATION=/var/lib/kubernetes/pki
     check_cert_only "ca" $SUBJ_CA $CERT_ISSUER
     check_cert_and_key "kube-proxy" $SUBJ_KP $CERT_ISSUER
-    check_cert_and_key "node01" "Subject:CN=system:node:node01,O=system:nodes" $CERT_ISSUER
+    check_cert_and_key "${HOST}" "Subject:CN=system:node:${HOST},O=system:nodes" $CERT_ISSUER
     check_kubeconfig "kube-proxy" "/var/lib/kube-proxy" "https://${LOADBALANCER}:6443"
     check_kubeconfig "kubelet" "/var/lib/kubelet" "https://${LOADBALANCER}:6443"
     ;;
