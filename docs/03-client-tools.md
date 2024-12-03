@@ -98,4 +98,4 @@ Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
 ```
 
 Next: [Certificate Authority](04-certificate-authority.md)<br>
-Prev: Compute Resources ([VirtualBox](../VirtualBox/docs/02-compute-resources.md)), ([Apple Silicon](../apple-silicon/docs/02-compute-resources.md))
+Prev: Compute Resources ([VirtualBox](02-compute-resources.md)), ([Apple Silicon](../apple-silicon/docs/02-compute-resources.md))

@@ -137,5 +137,5 @@ To power on again:
 vagrant up
 ```
 
-Next: [Client tools](../../docs/03-client-tools.md)<br>
+Next: [Client tools](03-client-tools.md)<br>
 Prev: [Prerequisites](01-prerequisites.md)

@@ -54,7 +54,7 @@ If you do change any of these, **please consider that a personal preference and 
 
 The network used by the VirtualBox virtual machines is `192.168.56.0/24`.
 
-To change this, edit the [Vagrantfile](../../vagrant/Vagrantfile) in your cloned copy (do not edit directly in github), and set the new value for the network prefix at line 9. This should not overlap any of the other network settings.
+To change this, edit the [Vagrantfile](../vagrant/Vagrantfile) in your cloned copy (do not edit directly in github), and set the new value for the network prefix at line 9. This should not overlap any of the other network settings.
 
 Note that you do not need to edit any of the other scripts to make the above change. It is all managed by shell variable computations based on the assigned VM  IP  addresses and the values in the hosts file (also computed).
 
@@ -84,7 +84,7 @@ Additionally edit line 164 of [coredns.yaml](../../deployments/coredns.yaml) to 
 
 > The use of tmux is optional and not required to complete this tutorial.
 
-![tmux screenshot](../../images/tmux-screenshot.png)
+![tmux screenshot](../images/tmux-screenshot.png)
 
 > Enable synchronize-panes by pressing `CTRL+B` followed by `"` to split the window into two panes. In each pane (selectable with mouse), ssh to the host(s) you will be working with.</br>Next type `CTRL+X` at the prompt to begin sync. In sync mode, the dividing line between panes will be red. Everything you type or paste in one pane will be echoed in the other.<br>To disable synchronization type `CTRL+X` again.</br></br>Note that the `CTRL-X` key binding is provided by a `.tmux.conf` loaded onto the VM by the vagrant provisioner.
 

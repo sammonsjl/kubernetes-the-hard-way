@@ -45,6 +45,6 @@ We will be building the following:
 
 ## Getting Started
 
-* If you are using Windows or Intel Mac, start [here](./VirtualBox/docs/01-prerequisites.md) to deploy VirtualBox and Vagrant.
+* If you are using Windows or Intel Mac, start [here](docs/01-prerequisites.md) to deploy VirtualBox and Vagrant.
 * If you are using Apple Silicon Mac (M1/M2/M3), start [here](./apple-silicon/docs/01-prerequisites.md) to deploy Multipass.
 
