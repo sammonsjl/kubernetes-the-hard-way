@@ -2,22 +2,49 @@
 
 In this lab you will generate [Kubernetes configuration files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), also known as "kubeconfigs", which enable Kubernetes clients to locate and authenticate to the Kubernetes API Servers.
 
-Note: It is good practice to use file paths to certificates in kubeconfigs that will be used by the services. When certificates are updated, it is not necessary to regenerate the config files, as you would have to if the certificate data was embedded. Note also that the cert files don't exist in these paths yet - we will place them in later labs.
-
-User configs, like `admin.kubeconfig` will have the certificate info embedded within them.
-
 ## Client Authentication Configs
 
-In this section you will generate kubeconfig files for the `controller manager`, `kube-proxy`, `scheduler` clients and the `admin` user.
-
-### Kubernetes Public IP Address
-
-Each kubeconfig requires a Kubernetes API Server to connect to. To support high availability the IP address assigned to the load balancer will be used, so let's first get the address of the loadbalancer into a shell variable such that we can use it in the kubeconfigs for services that run on worker nodes. The controller manager and scheduler need to talk to the local API server, hence they use the localhost address.
+In this section you will generate kubeconfig files for the `controller manager`, `kube-proxy`, `scheduler` clients and the `admin` user.  The commands in this lab must be run on `controlplane01`
 
 [//]: # (host:controlplane01)
 
 ```bash
 LOADBALANCER=$(dig +short loadbalancer)
+```
+
+### The kubelet Kubernetes Configuration File
+
+When generating kubeconfig files for Kubelets the client certificate matching the Kubelets node name must be used. This will ensure Kubelets are properly authorized by the Kubernetes [Node Authorizer](https://kubernetes.io/docs/admin/authorization/node/).
+
+Generate a kubeconfig file for worker node01 and node02:
+
+```bash
+for instance in node01 node02; do
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=/var/lib/kubernetes/pki/ca.crt \
+    --server=https://${LOADBALANCER}:6443 \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-credentials system:node:${instance} \
+    --client-certificate=/var/lib/kubernetes/pki/${instance}.crt \
+    --client-key=/var/lib/kubernetes/pki/${instance}.key \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=system:node:${instance} \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config use-context default \
+    --kubeconfig=${instance}.kubeconfig
+done
+```
+
+Results:
+
+```text
+node01.kubeconfig
+node02.kubeconfig
 ```
 
 ### The kube-proxy Kubernetes Configuration File
@@ -154,29 +181,27 @@ admin.kubeconfig
 
 Reference docs for kubeconfig [here](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
 
-##
-
 ## Distribute the Kubernetes Configuration Files
 
 Copy the appropriate `kube-proxy` kubeconfig files to each worker instance:
 
 ```bash
 for instance in node01 node02; do
-  scp kube-proxy.kubeconfig ${instance}:~/
+  scp kube-proxy.kubeconfig ${instance}.kubeconfig ${instance}:~/
 done
 ```
 
 Copy the appropriate `admin.kubeconfig`, `kube-controller-manager` and `kube-scheduler` kubeconfig files to each controller instance:
 
 ```bash
-for instance in controlplane01 controlplane02; do
+for instance in controlplane01 controlplane02 controlplane03; do
   scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ${instance}:~/
 done
 ```
 
 ## Optional - Check kubeconfigs
 
-At `controlplane01` and `controlplane02` nodes, run the following, selecting option 2
+At `controlplane01`, `controlplane02` and `controlplane03` nodes, run the following, selecting option 2
 
 [//]: # (command./cert_verify.sh 2)
 [//]: # (command:ssh controlplane02 './cert_verify.sh 2')
@@ -184,7 +209,6 @@ At `controlplane01` and `controlplane02` nodes, run the following, selecting opt
 ```
 ./cert_verify.sh
 ```
-
 
 Next: [Generating the Data Encryption Config and Key](./06-data-encryption-keys.md)<br>
 Prev: [Certificate Authority](./04-certificate-authority.md)
