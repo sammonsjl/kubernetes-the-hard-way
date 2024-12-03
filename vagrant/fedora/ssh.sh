@@ -13,10 +13,5 @@ then
     chown vagrant:vagrant /home/vagrant/.ssh
 fi
 
-
-if [ "$(hostname)" = "controlplane01" ]
-then
-    sh -c 'sudo apt update' &> /dev/null
-    sh -c 'sudo apt-get install -y sshpass' &> /dev/null
-fi
+sh -c 'sudo dnf install -y sshpass bind-utils openssl tmux' &> /dev/null
 
