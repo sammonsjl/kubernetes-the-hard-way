@@ -129,6 +129,10 @@ loadbalancer 192.168.100.30 -> 192.168.100.30
 
 ## Troubleshooting
 
+**`Error reading response body ... connection reset by peer` on the first plan.** That is the
+download of Fedora's release index from `fedoraproject.org` being cut off partway. Nothing has
+been created yet. Run `terraform apply` again.
+
 **SSH hangs or is refused.** cloud-init may still be running. Check a node's console log, where
 cloud-init prints `kthw: <node> ready after N seconds` when it is done:
 

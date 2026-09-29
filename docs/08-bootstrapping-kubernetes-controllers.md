@@ -161,14 +161,19 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now kube-apiserver kube-controller-manager kube-scheduler
 ```
 
-> Allow up to 10 seconds for the Kubernetes API Server to fully initialize.
-
 ### Verification
 
-[//]: # (sleep:10)
+The first start takes longer than later ones, up to a minute. The API server creates the default
+roles and bindings in etcd, with three API servers racing to do it at once. Until that finishes,
+the API server reports itself not ready, with `[-]poststarthook/rbac/bootstrap-roles failed`. Wait
+for it:
 
-Ask the local API server whether it is ready. `?verbose` lists each check it runs, and etcd is one
-of them:
+```bash
+until kubectl get --raw='/readyz' --kubeconfig admin.kubeconfig >/dev/null 2>&1; do sleep 2; done
+```
+
+Then ask the local API server for its full readiness report. `?verbose` lists each check it runs,
+and etcd is one of them:
 
 ```bash
 kubectl get --raw='/readyz?verbose' --kubeconfig admin.kubeconfig

@@ -66,7 +66,7 @@ pin one.
 ## What you need
 
 * A Linux workstation with KVM (`/dev/kvm`), libvirt and Terraform
-* 16 GB of RAM (the six VMs are allocated 11 GB) and ~20 GB of free disk
+* 16 GB of RAM at minimum, 24 GB comfortably (the six VMs are allocated 11 GB), and ~20 GB of free disk
 * Outbound internet access
 
 Details are in [Lab 1](docs/01-prerequisites.md).
