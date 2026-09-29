@@ -1,8 +1,14 @@
-# Generating the Data Encryption Config and Key
+# Lab 6 — Generating the Data Encryption Config and Key
 
-Kubernetes stores a variety of data including cluster state, application configurations, and secrets. Kubernetes supports the ability to [encrypt](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data) cluster data at rest.
+## What you will have at the end
 
-In this lab you will generate an encryption key and an [encryption config](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#understanding-the-encryption-at-rest-configuration) suitable for encrypting Kubernetes Secrets.  The commands in this lab must be run on `controlplane01`
+An [encryption config](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#understanding-the-encryption-at-rest-configuration) and key on each control plane node, ready for the API server to [encrypt](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data) Secrets before it writes them to etcd.
+
+Kubernetes stores cluster state, application configuration and Secrets in etcd. Without this, a Secret is stored as plain base64, which anyone with access to etcd or its backups can read. In Lab 12 you will look at a Secret's raw bytes in etcd and see that it is encrypted.
+
+Run the commands in this lab on `controlplane01`.
+
+[//]: # (host:controlplane01)
 
 ## The Encryption Key
 
@@ -24,17 +30,18 @@ envsubst < templates/encryption-config.yaml.template \
 Copy the `encryption-config.yaml` encryption config file to each controller instance:
 
 ```bash
-for instance in controlplane01 controlplane02 controlplane03 ; do
+for instance in controlplane01 controlplane02 controlplane03; do
   scp encryption-config.yaml ${instance}:~/
 done
 ```
 
-Move `encryption-config.yaml` encryption config file to appropriate directory.
+Install it where the API server will read it. The file holds the key itself, so only root may read it:
 
 ```bash
 for instance in controlplane01 controlplane02 controlplane03; do
-  ssh ${instance} sudo mkdir -p /var/lib/kubernetes/
-  ssh ${instance} sudo mv encryption-config.yaml /var/lib/kubernetes/
+  ssh ${instance} sudo install -D -o root -g root -m 0600 \
+    encryption-config.yaml /var/lib/kubernetes/encryption-config.yaml
+  ssh ${instance} rm encryption-config.yaml
 done
 ```
 

@@ -1,10 +1,12 @@
-# Generating Kubernetes Configuration Files for Authentication
+# Lab 5 — Generating Kubernetes Configuration Files for Authentication
 
-In this lab you will generate [Kubernetes configuration files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), also known as "kubeconfigs", which enable Kubernetes clients to locate and authenticate to the Kubernetes API Servers.
+## What you will have at the end
+
+A [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for each kubelet, kube-proxy, kube-controller-manager, kube-scheduler and the `admin` user, copied to the nodes that use it. A kubeconfig tells a Kubernetes client where to find the API server and how to authenticate to it.
 
 ## Client Authentication Configs
 
-In this section you will generate kubeconfig files for the `controller manager`, `kube-proxy`, `scheduler` clients and the `admin` user.  The commands in this lab must be run on `controlplane01`
+In this section you will generate kubeconfig files for the `controller manager`, `kube-proxy`, `scheduler` clients and the `admin` user.  Run the commands in this lab on `controlplane01`.
 
 [//]: # (host:controlplane01)
 
@@ -199,15 +201,17 @@ for instance in controlplane01 controlplane02 controlplane03; do
 done
 ```
 
-## Optional - Check kubeconfigs
+Notice which server each kubeconfig points at. The kubelets and kube-proxy run on the workers, so they reach the API through the load balancer. The controller manager, the scheduler and `admin.kubeconfig` are used on the control plane nodes themselves, so they talk to the local API server on `127.0.0.1`.
 
-At `controlplane01`, `controlplane02` and `controlplane03` nodes, run the following, selecting option 2
+## Optional: check the kubeconfigs
 
-[//]: # (command./cert_verify.sh 2)
+[//]: # (command:./cert_verify.sh 2)
 [//]: # (command:ssh controlplane02 './cert_verify.sh 2')
 
-```
-./cert_verify.sh
+```bash
+./cert_verify.sh 2
+ssh controlplane02 ./cert_verify.sh 2
+ssh controlplane03 ./cert_verify.sh 2
 ```
 
 Next: [Generating the Data Encryption Config and Key](./06-data-encryption-keys.md)<br>

@@ -1,28 +1,32 @@
-# Configuring kubectl for Remote Access
+# Lab 10 — Configuring kubectl for Remote Access
 
-In this lab you will generate a kubeconfig file for the `kubectl` command line utility based on the `admin` user credentials.
+## What you will have at the end
 
-> Run the commands in this lab from the same directory used to generate the admin client certificates.
+A default kubeconfig on `controlplane01` for the `admin` user, pointed at the load balancer rather
+than at the local API server. After this, `kubectl` works with no `--kubeconfig` flag, and it keeps
+working if any one control plane node goes down.
+
+> Run the commands in this lab from the same directory you generated the admin client certificate
+> in, which is the home directory on `controlplane01`.
 
 ## The Admin Kubernetes Configuration File
 
-Each kubeconfig requires a Kubernetes API Server to connect to. To support high availability the IP address assigned to the external load balancer fronting the Kubernetes API Servers will be used.
+Every kubeconfig names an API server to connect to. For high availability, this one uses the
+address of the load balancer in front of the API servers.
 
 [//]: # (host:controlplane01)
 
-On `controlplane01`
-
-Get the kube-api server load-balancer IP.
+On `controlplane01`, get the load balancer's address:
 
 ```bash
 LOADBALANCER=$(dig +short loadbalancer)
 ```
 
-Generate a kubeconfig file suitable for authenticating as the `admin` user:
+Generate a kubeconfig for the `admin` user. Without `--kubeconfig`, `kubectl config` writes to
+`~/.kube/config`, the file `kubectl` reads by default:
 
 ```bash
 {
-
   kubectl config set-cluster kubernetes-the-hard-way \
     --certificate-authority=ca.crt \
     --embed-certs=true \
@@ -30,7 +34,8 @@ Generate a kubeconfig file suitable for authenticating as the `admin` user:
 
   kubectl config set-credentials admin \
     --client-certificate=admin.crt \
-    --client-key=admin.key
+    --client-key=admin.key \
+    --embed-certs=true
 
   kubectl config set-context kubernetes-the-hard-way \
     --cluster=kubernetes-the-hard-way \
@@ -40,41 +45,49 @@ Generate a kubeconfig file suitable for authenticating as the `admin` user:
 }
 ```
 
-Reference doc for kubectl config [here](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
+`--embed-certs` copies the certificate and key into the kubeconfig, so it keeps working if the
+`.crt` and `.key` files in the home directory are moved or deleted.
+
+Reference doc for kubectl config
+[here](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/).
 
 ## Verification
 
-Check the health of the remote Kubernetes cluster:
+Check the health of the cluster through the load balancer:
 
-```
-kubectl get componentstatuses
-```
-
-Output will be similar to this. It may or may not list both etcd instances, however this is OK if you verified correct installation of etcd in lab 7.
-
-```
-Warning: v1 ComponentStatus is deprecated in v1.19+
-NAME                 STATUS    MESSAGE   ERROR
-controller-manager   Healthy   ok        
-scheduler            Healthy   ok        
-etcd-0               Healthy   ok  
+```bash
+kubectl get --raw='/readyz'; echo
 ```
 
-List the nodes in the remote Kubernetes cluster:
+```text
+ok
+```
+
+List the nodes:
 
 ```bash
 kubectl get nodes
 ```
 
-> output
-
-```
-NAME       STATUS      ROLES    AGE    VERSION
-node01     NotReady    <none>   118s   v1.28.4
-node02     NotReady    <none>   118s   v1.28.4
+```text
+NAME     STATUS     ROLES    AGE   VERSION
+node01   NotReady   <none>   2m    v1.37.1
+node02   NotReady   <none>   2m    v1.37.1
 ```
 
-The nodes are not ready as we have not yet installed pod networking. This comes later.
+The nodes are still `NotReady`, because there is no pod networking yet. The next lab installs it.
 
-Next: [Deploy Liferay](./11-deploy-liferay.md)</br>
-Prev: [Bootstrapping the Kubernetes Worker Nodes](./09-bootstrapping-kubernetes-workers.md)
+Check that the server and client versions match:
+
+```bash
+kubectl version
+```
+
+```text
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.1
+```
+
+Next: [Cluster Add-ons](11-cluster-addons.md)<br>
+Prev: [Bootstrapping the Kubernetes Worker Nodes](09-bootstrapping-kubernetes-workers.md)

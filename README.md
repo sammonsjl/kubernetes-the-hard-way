@@ -1,31 +1,75 @@
 # Kubernetes The Hard Way
 
-This tutorial walks you through setting up Kubernetes the hard way on a local machine using a hypervisor. This 
-guide is not for someone looking for a fully automated tool to bring up a Kubernetes cluster. Kubernetes The Hard Way is optimized for learning, which means taking the long route to ensure you understand each task required to bootstrap a Kubernetes cluster.
+This tutorial walks you through setting up Kubernetes the hard way, on six KVM virtual machines on
+your own Linux workstation. It is not for someone looking for a fully automated tool to bring up a
+Kubernetes cluster. Kubernetes The Hard Way is optimized for learning. It takes the long route so
+that you understand each task required to bootstrap a Kubernetes cluster.
 
 > The results of this tutorial should not be viewed as production ready.
 
 ## Target Audience
 
-The target audience for this tutorial is someone who wants to understand the fundamentals of Kubernetes and how the core components fit together.
+The target audience for this tutorial is someone who wants to understand the fundamentals of
+Kubernetes and how the core components fit together.
 
 ## Cluster Details
 
-Kubernetes The Hard Way guides you through bootstrapping a highly available Kubernetes cluster with end-to-end encryption between components and RBAC authentication.
+Kubernetes The Hard Way guides you through bootstrapping a highly available Kubernetes cluster
+with end-to-end encryption between components and RBAC authentication. Every component is a
+release binary you install by hand and run under a systemd unit you write yourself.
 
-* [kubernetes](https://github.com/kubernetes/kubernetes) v1.31.2
-* [etcd](https://github.com/etcd-io/etcd) v3.5.16
-* [containerd](https://github.com/containerd/containerd) v1.7.23
-* [calico-cni](https://doc.tigera.io/calico/latest/about) v3.29
-* [coredns](https://github.com/coredns/coredns) v1.9.4
+* [kubernetes](https://github.com/kubernetes/kubernetes) v1.37.1
+* [etcd](https://github.com/etcd-io/etcd) v3.7.2
+* [containerd](https://github.com/containerd/containerd) v2.4.1
+* [runc](https://github.com/opencontainers/runc) v1.5.2
+* [calico](https://docs.tigera.io/calico/latest/about) v3.32.2
+* [coredns](https://github.com/coredns/coredns) v1.14.7
+* [local-path-provisioner](https://github.com/rancher/local-path-provisioner) v0.0.37
+
+When it is built, it runs [Ghost](https://ghost.org/) 6 on MySQL 8.4, served to your browser
+through the cluster's own load balancer.
 
 ### Node configuration
 
-We will be building the following:
+```
+                          your workstation
+                                 │
+                 ┌───────────────┴────────────────┐
+                 │ loadbalancer  192.168.100.30   │  HAProxy
+                 │   :6443 → the API servers      │
+                 │   :80   → Ghost (NodePort)     │
+                 └───────┬────────────────┬───────┘
+          ┌──────────────┘                └───────────────┐
+┌─────────┴──────────────────────┐   ┌────────────────────┴────────────┐
+│ controlplane01  .11            │   │ node01  .21                     │
+│ controlplane02  .12            │   │ node02  .22                     │
+│ controlplane03  .13            │   │   containerd · kubelet ·        │
+│   etcd · kube-apiserver ·      │   │   kube-proxy                    │
+│   controller-manager ·         │   │   Calico · CoreDNS · Ghost ·    │
+│   scheduler                    │   │   MySQL                         │
+└────────────────────────────────┘   └─────────────────────────────────┘
+               all on the kthw libvirt NAT network, 192.168.100.0/24
+```
 
-* Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`) running the control plane components as operating system services. 
-* Two worker nodes (`node01` and `node02`)
-* One loadbalancer VM running [HAProxy](https://www.haproxy.org/) to balance requests between the three API servers and provide the endpoint for your KUBECONFIG.
+* Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`), running
+  etcd and the control plane components as systemd services. `controlplane01` is also where you
+  run the admin commands.
+* Two worker nodes (`node01` and `node02`).
+* One load balancer VM running [HAProxy](https://www.haproxy.org/). It balances requests across
+  the three API servers and is the endpoint in your kubeconfig. In the last lab it becomes Ghost's
+  front door as well.
+
+The VMs are Fedora Cloud, built by [Terraform](https://developer.hashicorp.com/terraform) against
+local libvirt/KVM. They follow Fedora forward: each build uses the newest stable release unless you
+pin one.
+
+## What you need
+
+* A Linux workstation with KVM (`/dev/kvm`), libvirt and Terraform
+* 16 GB of RAM (the six VMs are allocated 11 GB) and ~20 GB of free disk
+* Outbound internet access
+
+Details are in [Lab 1](docs/01-prerequisites.md).
 
 ## Labs
 
@@ -39,4 +83,18 @@ We will be building the following:
 * [Bootstrapping the Kubernetes Control Plane](docs/08-bootstrapping-kubernetes-controllers.md)
 * [Bootstrapping the Kubernetes Worker Nodes](docs/09-bootstrapping-kubernetes-workers.md)
 * [Configuring kubectl for Remote Access](docs/10-configuring-kubectl.md)
-* [Deploy Liferay](docs/11-deploy-liferay.md)
+* [Cluster Add-ons](docs/11-cluster-addons.md)
+* [Deploy Ghost](docs/12-deploy-ghost.md)
+* [Cleaning Up](docs/99-cleanup.md)
+
+## Repository layout
+
+| Path                   | What it is                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `terraform/`           | The six VMs: the `kvm` root, the Fedora image module, and the cloud-init template    |
+| `templates/`           | Configs and systemd units the labs fill in with node addresses, using `envsubst`    |
+| `configs/`             | Configs and units used as-is                                                        |
+| `addons/`              | The Calico installation and the CoreDNS manifest (Lab 11)                           |
+| `ghost/`               | MySQL and Ghost manifests (Lab 12)                                                  |
+| `downloads.txt`        | The pinned release binaries                                                         |
+| `cert_verify.sh`       | An optional checker for the certificates and kubeconfigs in Labs 4, 5, 8 and 9      |

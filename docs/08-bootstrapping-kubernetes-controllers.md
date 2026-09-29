@@ -1,17 +1,25 @@
-# Bootstrapping the Kubernetes Control Plane
+# Lab 8 — Bootstrapping the Kubernetes Control Plane
 
-In this lab you will bootstrap the Kubernetes control plane across 3 compute instances and configure it for high availability. You will also create an external load balancer that exposes the Kubernetes API Servers to remote clients. The following components will be installed on each node: Kubernetes API Server, Scheduler, and Controller Manager.
+## What you will have at the end
 
-Note that in a production-ready cluster it is recommended to have an odd number of controlplane nodes as for multi-node services like etcd, leader election and quorum work better. See lecture on this ([KodeKloud](https://kodekloud.com/topic/etcd-in-ha/), [Udemy](https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14296192#overview)).
+The Kubernetes API Server, Scheduler and Controller Manager running as systemd services on all three
+control plane nodes, with an HAProxy load balancer in front of the three API servers. The load
+balancer is the address every client outside the control plane will use.
 
+If you look at the command line arguments these components are given, you will recognise many of
+the files created in earlier labs: certificates, keys, kubeconfigs and the encryption
+configuration.
 
-If you examine the command line arguments passed to the various control plane components, you should recognise many of the files that were created in earlier sections of this course, such as certificates, keys, kubeconfigs, the encryption configuration etc.
+A production cluster uses an odd number of control plane nodes, because etcd needs a majority of
+its members to agree. Three members keep working with one of them down.
 
 ## Prerequisites
 
-The commands in this lab up as far as the RBAC configuration must be run on each controller instance: `controlplane01`, `controlplane02` and `controlplane03`.
+Run the commands in this lab, up to the RBAC section, on each control plane node:
+`controlplane01`, `controlplane02` and `controlplane03`.
 
-You can perform this step with [tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
+You can do all three at once with
+[tmux](01-prerequisites.md#running-commands-in-parallel-with-tmux).
 
 ## Provision the Kubernetes Control Plane
 
@@ -21,52 +29,43 @@ You can perform this step with [tmux](01-prerequisites.md#running-commands-in-pa
 
 Reference: https://kubernetes.io/releases/download/#binaries
 
-Install the Kubernetes binaries:
-
 ```bash
-{
-  cd ~/downloads
-
-  chmod +x kube-apiserver \
-    kube-controller-manager \
-    kube-scheduler \
-    kubectl
-
-  sudo cp kube-apiserver \
-    kube-controller-manager \
-    kube-scheduler \
-    kubectl /usr/local/bin/
-
-    cd ~
-}
+sudo install -m 0755 \
+  downloads/kube-apiserver \
+  downloads/kube-controller-manager \
+  downloads/kube-scheduler \
+  downloads/kubectl \
+  /usr/local/bin/
 ```
 
 ### Configure the Kubernetes API Server
 
+Put the certificates and keys the control plane uses into the PKI directory:
+
 ```bash
 {
-    sudo mkdir -p /var/lib/kubernetes/pki
+  sudo mkdir -p /var/lib/kubernetes/pki
 
-    sudo cp ca.crt ca.key /var/lib/kubernetes/pki
+  sudo cp ca.crt ca.key /var/lib/kubernetes/pki/
 
-    for c in kube-apiserver service-account apiserver-kubelet-client etcd-server kube-scheduler kube-controller-manager
-    do
-      sudo cp "$c.crt" "$c.key" /var/lib/kubernetes/pki/
-    done
+  for c in kube-apiserver service-account apiserver-kubelet-client etcd-server kube-scheduler kube-controller-manager; do
+    sudo cp "$c.crt" "$c.key" /var/lib/kubernetes/pki/
+  done
 
-    sudo chown root:root /var/lib/kubernetes/pki/*
-    sudo chmod 600 /var/lib/kubernetes/pki/*
+  sudo chown root:root /var/lib/kubernetes/pki/*
+  sudo chmod 600 /var/lib/kubernetes/pki/*
 }
 ```
 
-The instance internal IP address will be used to advertise the API Server to members of the cluster. The load balancer IP address will be used as the external endpoint to the API servers.<br>
-Retrieve these internal IP addresses:
+The API server advertises itself to the rest of the cluster on this node's address,
+`PRIMARY_IP`. The load balancer's address is the issuer of service account tokens, because it is
+the stable name of the API as a whole:
 
 ```bash
 export LOADBALANCER=$(dig +short loadbalancer)
 ```
 
-IP addresses of the two controlplane nodes, where the etcd servers are.
+It stores its state in etcd, on the three control plane nodes:
 
 ```bash
 export CONTROL01=$(dig +short controlplane01)
@@ -74,7 +73,7 @@ export CONTROL02=$(dig +short controlplane02)
 export CONTROL03=$(dig +short controlplane03)
 ```
 
-CIDR ranges used *within* the cluster
+The address ranges used *inside* the cluster:
 
 ```bash
 export POD_CIDR=10.244.0.0/16
@@ -85,8 +84,18 @@ Create the `kube-apiserver.service` systemd unit file:
 
 ```bash
 envsubst < templates/kube-apiserver.service.template \
-| sudo tee /etc/systemd/system/kube-apiserver.service
+  | sudo tee /etc/systemd/system/kube-apiserver.service
 ```
+
+A few of its flags are worth reading closely:
+
+- `--authorization-mode=Node,RBAC`. The Node authorizer limits each kubelet to the objects of the
+  pods on its own node. RBAC covers everyone else.
+- `--kubelet-certificate-authority`. The API server verifies each kubelet's serving certificate
+  against the cluster CA when it connects for `logs`, `exec` and `port-forward`. This is why the
+  node certificates in Lab 4 carry the node's IP address.
+- `--encryption-provider-config`. This is the file from Lab 6. Secrets are encrypted before they
+  reach etcd.
 
 ### Configure the Kubernetes Controller Manager
 
@@ -100,8 +109,12 @@ Create the `kube-controller-manager.service` systemd unit file:
 
 ```bash
 envsubst < templates/kube-controller-manager.service.template \
-| sudo tee /etc/systemd/system/kube-controller-manager.service
+  | sudo tee /etc/systemd/system/kube-controller-manager.service
 ```
+
+The controller manager gives each node a slice of `POD_CIDR` (`--allocate-node-cidrs`), and signs
+certificates with the cluster CA's key (`--cluster-signing-*`). That is why the CA key is on the
+control plane nodes and nowhere else.
 
 ### Configure the Kubernetes Scheduler
 
@@ -118,79 +131,100 @@ sudo mkdir -p /etc/kubernetes/config/
 sudo cp configs/kube-scheduler.yaml /etc/kubernetes/config/
 ```
 
+The scheduler reads its settings from this file (`--config`) rather than from flags. Here that is only its kubeconfig and leader election, which stops three schedulers from placing the same pod at the same time.
+
 Create the `kube-scheduler.service` systemd unit file:
 
 ```bash
 envsubst < templates/kube-scheduler.service.template \
-| sudo tee /etc/systemd/system/kube-scheduler.service
+  | sudo tee /etc/systemd/system/kube-scheduler.service
 ```
 
-## Secure kubeconfigs
+### Secure the kubeconfigs
 
 ```bash
 sudo chmod 600 /var/lib/kubernetes/*.kubeconfig
 ```
 
-## Optional - Check Certificates and kubeconfigs
-
-At `controlplane01`, `controlplane02` and `controlplane03` nodes, run the following, selecting option 3
+### Optional: check the certificates and kubeconfigs
 
 [//]: # (command:./cert_verify.sh 3)
 
+```bash
+./cert_verify.sh 3
 ```
-./cert_verify.sh
-```
-
 
 ### Start the Controller Services
 
 ```bash
-{
-  sudo systemctl daemon-reload
-  sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler
-  sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
-}
+sudo systemctl daemon-reload
+sudo systemctl enable --now kube-apiserver kube-controller-manager kube-scheduler
 ```
 
 > Allow up to 10 seconds for the Kubernetes API Server to fully initialize.
-
 
 ### Verification
 
 [//]: # (sleep:10)
 
-After running the above commands on both controlplane nodes, run the following on `controlplane01`
+Ask the local API server whether it is ready. `?verbose` lists each check it runs, and etcd is one
+of them:
 
 ```bash
-kubectl get componentstatuses --kubeconfig admin.kubeconfig
+kubectl get --raw='/readyz?verbose' --kubeconfig admin.kubeconfig
 ```
 
-It will give you a deprecation warning here, but that's ok.
-
-> Output
-
+```text
+[+]ping ok
+[+]log ok
+[+]etcd ok
+[+]etcd-readiness ok
+[+]informer-sync ok
+...
+[+]poststarthook/apiservice-openapiv3-controller ok
+[+]shutdown ok
+readyz check passed
 ```
-Warning: v1 ComponentStatus is deprecated in v1.19+
-NAME                 STATUS    MESSAGE   ERROR
-scheduler            Healthy   ok        
-controller-manager   Healthy   ok        
-etcd-0               Healthy   ok 
+
+The controller manager and the scheduler each serve their own health endpoint, on the loopback
+address only:
+
+```bash
+curl -sk https://127.0.0.1:10257/healthz; echo
+curl -sk https://127.0.0.1:10259/healthz; echo
 ```
 
-> Remember to run the above commands on each controller node: `controlplane01`, `controlplane02` and `controlplane03`.
+```text
+ok
+ok
+```
+
+> In older versions of this tutorial, `kubectl get componentstatuses` did this job. That API has
+> been deprecated since v1.19 and only ever checked one etcd member. The health endpoints above are
+> what it was replaced with.
+
+> Remember to run the commands above on each control plane node: `controlplane01`,
+> `controlplane02` and `controlplane03`.
 
 ## RBAC for Kubelet Authorization
 
-In this section you will configure RBAC permissions to allow the Kubernetes API Server to access the Kubelet API on each worker node. Access to the Kubelet API is required for retrieving metrics, logs, and executing commands in pods.
+In this section you configure RBAC permissions that let the Kubernetes API Server reach the Kubelet
+API on each worker node. The API server needs that access to fetch metrics and logs and to run
+commands in pods.
 
-> This tutorial sets the Kubelet `--authorization-mode` flag to `Webhook`. Webhook mode uses the [SubjectAccessReview](https://kubernetes.io/docs/admin/authorization/#checking-api-access) API to determine authorization.
-
+> The kubelets in Lab 9 set their `authorization.mode` to `Webhook`. In Webhook mode the kubelet
+> asks the API server, through the
+> [SubjectAccessReview](https://kubernetes.io/docs/reference/access-authn-authz/authorization/#checking-api-access)
+> API, whether the caller may do what it is asking.
 
 [//]: # (host:controlplane01)
 
-Run the below on the `controlplane01` node.
+Run this on the `controlplane01` node only.
 
-Create the `system:kube-apiserver-to-kubelet` [ClusterRole](https://kubernetes.io/docs/admin/authorization/rbac/#role-and-clusterrole) with permissions to access the Kubelet API and perform most common tasks associated with managing pods:
+Create the `system:kube-apiserver-to-kubelet`
+[ClusterRole](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)
+with permission to use the Kubelet API, and bind it to the `kube-apiserver` user. That user is the
+`apiserver-kubelet-client` certificate's common name:
 
 ```bash
 kubectl apply -f configs/kube-apiserver-to-kubelet.yaml \
@@ -199,23 +233,39 @@ kubectl apply -f configs/kube-apiserver-to-kubelet.yaml \
 
 ## The Kubernetes Frontend Load Balancer
 
-In this section you will provision an external load balancer to front the Kubernetes API Servers. The `kubernetes-the-hard-way` static IP address will be attached to the resulting load balancer.
-
+In this section you set up a load balancer to front the three Kubernetes API Servers.
 
 ### Provision a Network Load Balancer
 
-A NLB operates at [layer 4](https://en.wikipedia.org/wiki/OSI_model#Layer_4:_Transport_layer) (TCP) meaning it passes the traffic straight through to the back end servers unfettered and does not interfere with the TLS process, leaving this to the Kube API servers.
+A network load balancer works at [layer 4](https://en.wikipedia.org/wiki/Transport_layer) (TCP).
+It passes traffic straight through to the back-end servers without touching TLS, so clients still
+authenticate to the API servers with their own certificates.
 
-Login to `loadbalancer` instance using `vagrant ssh` (or `multipass shell` on Apple Silicon).
+Log in to the `loadbalancer` node:
+
+```bash
+ssh loadbalancer
+```
 
 [//]: # (host:loadbalancer)
-
 
 ```bash
 sudo dnf install -y haproxy
 ```
 
-Read IP addresses of controlplane nodes and this host to shell variables
+SELinux is enforcing on this node, as Fedora ships it. Its policy lets HAProxy bind and connect only to the ports of well-known web services, and 6443 is not one of them. Without the change below, HAProxy refuses to start, and the journal shows the reason:
+
+```text
+[ALERT] : Binding [/etc/haproxy/haproxy.cfg:11] for frontend kubernetes: protocol tcpv4: cannot bind socket (Permission denied)
+```
+
+The `Permission denied` comes from SELinux, not from file permissions. Let HAProxy use any port:
+
+```bash
+sudo setsebool -P haproxy_connect_any 1
+```
+
+Read the addresses of the control plane nodes into shell variables:
 
 ```bash
 CONTROL01=$(dig +short controlplane01)
@@ -224,14 +274,23 @@ CONTROL03=$(dig +short controlplane03)
 LOADBALANCER=$(dig +short loadbalancer)
 ```
 
-Create HAProxy configuration to listen on API server port on this host and distribute requests evenly to the two controlplane nodes.
-
-We configure it to operate as a [layer 4](https://en.wikipedia.org/wiki/Transport_layer) loadbalancer (using `mode tcp`), which means it forwards any traffic directly to the backends without doing anything like [SSL offloading](https://ssl2buy.com/wiki/ssl-offloading).
+Configure HAProxy to listen on the API server port and spread connections across the three control
+plane nodes. `mode tcp` makes it a layer 4 load balancer: it forwards the traffic as-is and does no
+[TLS offloading](https://en.wikipedia.org/wiki/TLS_termination_proxy).
 
 ```bash
 cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
+global
+    log /dev/log local0
+
+defaults
+    log     global
+    timeout connect 5s
+    timeout client  1h
+    timeout server  1h
+
 frontend kubernetes
-    bind 0.0.0.0:6443
+    bind ${LOADBALANCER}:6443
     option tcplog
     mode tcp
     default_backend kubernetes-controlplane-nodes
@@ -246,22 +305,33 @@ backend kubernetes-controlplane-nodes
 EOF
 ```
 
+The one-hour client and server timeouts are deliberate. `kubectl logs -f`, `exec` and every
+controller's watch keep a connection open for a long time, and a short timeout cuts them off in
+the middle.
+
 ```bash
-sudo systemctl enable haproxy
-sudo systemctl start haproxy
+sudo systemctl enable --now haproxy
 ```
 
 ### Verification
 
 [//]: # (sleep:2)
 
-Make an HTTP request for the Kubernetes version info:
+Make an HTTPS request for the Kubernetes version info through the load balancer:
 
 ```bash
 curl -k https://${LOADBALANCER}:6443/version
 ```
 
-This should output some details about the version and build information of the API server.
+```text
+{
+  "major": "1",
+  "minor": "37",
+  "gitVersion": "v1.37.1",
+  ...
+  "platform": "linux/amd64"
+}
+```
 
-Next: [Bootstrapping the Kubernetes Worker Nodes](./09-bootstrapping-kubernetes-workers.md)<br>
-Prev: [Bootstrapping the etcd Cluster](./07-bootstrapping-etcd.md)
+Next: [Bootstrapping the Kubernetes Worker Nodes](09-bootstrapping-kubernetes-workers.md)<br>
+Prev: [Bootstrapping the etcd Cluster](07-bootstrapping-etcd.md)

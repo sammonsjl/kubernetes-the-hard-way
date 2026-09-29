@@ -1,95 +1,99 @@
-# Provisioning a CA and Generating TLS Certificates
+# Lab 4 — Provisioning a CA and Generating TLS Certificates
 
-In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using openssl to bootstrap a Certificate Authority, and generate TLS certificates for the following components: kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, kube-proxy and etcd.
+## What you will have at the end
 
-# Where to do these?
+A [PKI](https://en.wikipedia.org/wiki/Public_key_infrastructure) built with `openssl`: a
+certificate authority, and a certificate signed by it for each of kube-apiserver,
+kube-controller-manager, kube-scheduler, each kubelet, kube-proxy, etcd, the service account signer
+and the `admin` user. Each one is on the nodes that need it.
 
-You can do these on any machine with `openssl` on it. But you should be able to copy the generated files to the provisioned VMs. Or just do these from one of the controlplane nodes.
+## Where to do this
 
-In our case we do the following steps on the `controlplane01` node, as we have set it up to be the administrative client.
+You can do this on any machine with `openssl` that can copy files to the VMs. Here it is done on
+`controlplane01`, the admin workstation.
 
 [//]: # (host:controlplane01)
 
 ## Certificate Authority
 
-In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates.
-
-Query IPs of hosts we will insert as certificate subject alternative names (SANs), which will be read from `/etc/hosts`.
-
-Set up environment variables. Run the following:
+The certificates carry node addresses as subject alternative names (SANs). Read them from
+`/etc/hosts`:
 
 ```bash
 export CONTROL01=$(dig +short controlplane01)
 export CONTROL02=$(dig +short controlplane02)
 export CONTROL03=$(dig +short controlplane03)
+export NODE01=$(dig +short node01)
+export NODE02=$(dig +short node02)
 export LOADBALANCER=$(dig +short loadbalancer)
 ```
 
-Compute cluster internal API server service address, which is always `.1` in the service CIDR range. This is also required as a SAN in the API server certificate. Run the following:
+The API server is also reachable inside the cluster at the first address of the service network,
+so that address needs to be a SAN too:
 
 ```bash
-export SERVICE_CIDR=10.96.0.0/24
+export SERVICE_CIDR=10.96.0.0/16
 export API_SERVICE=$(echo $SERVICE_CIDR | awk 'BEGIN {FS="."} ; { printf("%s.%s.%s.1", $1, $2, $3) }')
 ```
 
-Check that the environment variables are set. Run the following:
+Check that the variables are set:
 
 ```bash
-echo $CONTROL01
-echo $CONTROL02
-echo $CONTROL03
-echo $LOADBALANCER
-echo $SERVICE_CIDR
-echo $API_SERVICE
+echo $CONTROL01 $CONTROL02 $CONTROL03 $NODE01 $NODE02 $LOADBALANCER
+echo $SERVICE_CIDR $API_SERVICE
 ```
 
-The output should look like this with one IP address per line. If you changed any of the defaults mentioned in the [prerequisites](./01-prerequisites.md) page, then addresses may differ.
-
-```
-192.168.56.11
-192.168.56.12
-192.168.56.30
-10.96.0.0/24
-10.96.0.1
+```text
+192.168.100.11 192.168.100.12 192.168.100.13 192.168.100.21 192.168.100.22 192.168.100.30
+10.96.0.0/16 10.96.0.1
 ```
 
-Prepare the `ca.conf` openssl conf file:
+Render the `ca.conf` openssl configuration file from its template:
 
 ```bash
-envsubst < templates/ca.conf.template \
-  > ca.conf
+envsubst < templates/ca.conf.template > ca.conf
 ```
 
-Take a moment to review the `ca.conf` configuration file:
+Take a moment to review it:
 
 ```bash
 cat ca.conf
 ```
 
-You don't need to understand everything in the `ca.conf` file to complete this tutorial, but you should consider it a starting point for learning `openssl` and the configuration that goes into managing certificates at a high level.
+You don't need to understand everything in `ca.conf` to complete this tutorial. It is a good
+starting point for learning `openssl` and the configuration that goes into managing certificates.
 
-Every certificate authority starts with a private key and root certificate. In this section we are going to create a self-signed certificate authority, and while that's all we need for this tutorial, this shouldn't be considered something you would do in a real-world production level environment.
+Two SANs in it are worth noticing now:
 
-Generate the CA configuration file, certificate, and private key:
+- The **node01** and **node02** sections name the node's IP address. The same certificate is the
+  kubelet's *serving* certificate. In Lab 8 the API server is told to verify the kubelets against
+  this CA, and it reaches each kubelet by IP address. Without the IP in the SAN, `kubectl logs`,
+  `exec` and `port-forward` fail with a certificate error.
+- The **kube-apiserver** section names every control plane node, the load balancer, `127.0.0.1`,
+  the in-cluster service address and the `kubernetes.default...` DNS names. It covers every name
+  a client could use to reach an API server.
+
+Every certificate authority starts with a private key and a root certificate. Here you create a
+self-signed one. That is enough for this tutorial, but it is not how you would run a CA in
+production.
+
+Generate the CA's private key and self-signed certificate:
 
 ```bash
-{
-  openssl req -x509 -noenc -newkey rsa:4096 \
-    -keyout ca.key -out ca.crt -days 36500 -config ca.conf
-}
+openssl req -x509 -noenc -newkey rsa:4096 \
+  -keyout ca.key -out ca.crt -days 36500 -config ca.conf
 ```
 
 Results:
 
-```txt
+```text
 ca.crt ca.key
 ```
 
 ## Create Client and Server Certificates
 
-In this section you will generate client and server certificates for each Kubernetes component and a client certificate for the Kubernetes `admin` user.
-
-Generate the certificates and private keys:
+Generate a key, a signing request and a signed certificate for each Kubernetes component and for
+the `admin` user:
 
 ```bash
 certs=(
@@ -112,21 +116,30 @@ for i in ${certs[*]}; do
 done
 ```
 
-The results of running the above command will generate a private key, certificate request, and signed SSL certificate for each of the Kubernetes components. You can list the generated files with the following command:
+Check that the kubelet certificates picked up the node's address:
+
+```bash
+openssl x509 -in node01.crt -noout -ext subjectAltName
+```
+
+```text
+X509v3 Subject Alternative Name:
+    DNS:node01, IP Address:192.168.100.21, IP Address:127.0.0.1
+```
 
 ## Verify the PKI
 
-Run the following, and select option 1 to check all required certificates were generated.
+Run the following to check that every required certificate was generated:
 
 [//]: # (command:./cert_verify.sh 1)
 
-```
-./cert_verify.sh
+```bash
+./cert_verify.sh 1
 ```
 
 Expected output:
 
-```
+```text
 The selected option is 1, proceeding the certificate verification of Master node
 ca cert and key found, verifying the authenticity
 ca cert and key are correct
@@ -148,16 +161,15 @@ kube-proxy cert and key found, verifying the authenticity
 kube-proxy cert and key are correct
 ```
 
-If there are any errors, please review above steps and then re-verify
+If there are any errors, review the steps above and then run the check again.
 
 ## Distribute the Certificates
 
-Copy the appropriate certificates and private keys to each instance:
+Copy the certificates and private keys each node needs:
 
 ```bash
-{
 for instance in controlplane01 controlplane02 controlplane03; do
-  scp -o StrictHostKeyChecking=no ca.crt ca.key kube-apiserver.key kube-apiserver.crt \
+  scp ca.crt ca.key kube-apiserver.key kube-apiserver.crt \
     apiserver-kubelet-client.crt apiserver-kubelet-client.key \
     service-account.key service-account.crt \
     etcd-server.key etcd-server.crt \
@@ -166,20 +178,18 @@ for instance in controlplane01 controlplane02 controlplane03; do
     ${instance}:~/
 done
 
-for instance in node01 node02 ; do
+for instance in node01 node02; do
   scp ca.crt kube-proxy.crt kube-proxy.key ${instance}.key ${instance}.crt ${instance}:~/
 done
-}
 ```
 
-## Optional - Check Certificates on controlplane02 and controlplane03
+## Optional: check the certificates on controlplane02 and controlplane03
 
-Run the following on `controlplane02` and `controlplane03`, selecting option 1
+[//]: # (command:ssh controlplane02 './cert_verify.sh 1')
 
-[//]: # (commandssh controlplane02 './cert_verify.sh 1')
-
-```
-./cert_verify.sh
+```bash
+ssh controlplane02 ./cert_verify.sh 1
+ssh controlplane03 ./cert_verify.sh 1
 ```
 
 Next: [Generating Kubernetes Configuration Files for Authentication](05-kubernetes-configuration-files.md)<br>

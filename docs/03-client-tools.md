@@ -1,142 +1,151 @@
-# Installing the Client Tools
+# Lab 3 — Installing the Client Tools
 
-Begin by logging into `controlplane01` using `vagrant ssh` for KVM.
+## What you will have at the end
 
-## Access all VMs
+- The lab's configuration files on every node.
+- `controlplane01` set up as the admin workstation: it can SSH to every other node without a
+  password, it holds the Kubernetes release binaries (and has passed them on), and `kubectl` is
+  installed.
 
-Here we create an SSH key pair for the user who we are logged in as. We will copy the public key of this pair to the other controlplane nodes and both workers to permit us to use password-less SSH (and SCP) go get from `controlplane01` to these other nodes in the context of the user which exists on all nodes.
+## Copy the lab files to the nodes
 
-Generate SSH key pair on `controlplane01` node:
+Run this on your **workstation**, from the root of your clone of this repository. It copies the
+files the later labs render and apply:
+
+- `templates/`: systemd units and configs that `envsubst` fills in with addresses
+- `configs/`: the files that are used as-is
+- `addons/` and `ghost/`: the manifests for Labs 11 and 12
+- `downloads.txt`: the list of binaries to fetch
+- `cert_verify.sh`: an optional checker for Labs 4, 5, 8 and 9
+
+```bash
+for n in controlplane01 controlplane02 controlplane03 node01 node02; do
+  scp -rq templates configs addons ghost downloads.txt cert_verify.sh ${n}:~/
+done
+```
+
+## Access all VMs from controlplane01
+
+From here on, most labs are run on `controlplane01`. It generates the certificates and
+configuration and copies them to the other nodes, so it needs SSH access to all of them.
+
+Log in to it:
+
+```bash
+ssh controlplane01
+```
 
 [//]: # (host:controlplane01)
 
-```bash
-ssh-keygen -t rsa
-```
-
-Leave all settings to default by pressing `ENTER` at any prompt.
-
-Add this key to the local `authorized_keys` (`controlplane01`) as in some commands we `scp` to ourselves.
+Generate a key pair for the `fedora` user on `controlplane01`, and authorize it locally too, since
+some later commands `scp` to `controlplane01` itself:
 
 ```bash
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
 ```
 
-Copy the key to the other hosts. You will be asked to enter a password for each of the `ssh-copy-id` commands. The password is: `vagrant`
-
-The option `-o StrictHostKeyChecking=no` tells it not to ask if you want to connect to a previously unknown host. Not best practice in the real world, but speeds things up here.
-
-`$(whoami)` selects the appropriate username to connect to the remote VMs. On KVM this evaluates to `vagrant`
+The other nodes have no password to type into `ssh-copy-id`. Their only credential is your lab key,
+and that stays on your workstation. So the public key is carried across from there instead. Back on
+your **workstation**:
 
 ```bash
-ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@controlplane02
-ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@controlplane03
-ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@loadbalancer
-ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@node01
-ssh-copy-id -o StrictHostKeyChecking=no $(whoami)@node02
-```
-For each host, the output should be similar to this. If it is not, then you may have entered an incorrect password. Retry the step.
-```
-Number of key(s) added: 1
+PUBKEY=$(ssh controlplane01 cat .ssh/id_ed25519.pub)
+for n in controlplane02 controlplane03 node01 node02 loadbalancer; do
+  echo "$PUBKEY" | ssh $n 'cat >> ~/.ssh/authorized_keys'
+done
 ```
 
-Verify connection
+Now, on `controlplane01`, check that it can reach every node. `-o StrictHostKeyChecking=accept-new`
+records each host key on first contact instead of asking:
 
-```
-ssh controlplane01
-exit
-
-ssh controlplane02
-exit
-
-ssh controlplane03
-exit
-
-ssh node01
-exit
-
-ssh node02
-exit
-
-ssh loadbalancer
-exit
+```bash
+for n in controlplane01 controlplane02 controlplane03 node01 node02 loadbalancer; do
+  ssh -o StrictHostKeyChecking=accept-new $n hostname
+done
 ```
 
-### Download Binaries
+```text
+controlplane01
+controlplane02
+controlplane03
+node01
+node02
+loadbalancer
+```
 
-In this section you will download the binaries for the various Kubernetes components. The binaries will be stored in the `downloads` directory on the `controlplane01` node, which will reduce the amount of internet bandwidth required to complete this tutorial as we avoid downloading the binaries multiple times for each machine in our Kubernetes cluster.
+## Download Binaries
 
-The binaries that will be downloaded are listed in the `downloads.txt` file, which you can review using the `cat` command:
+In this section you download the binaries for the Kubernetes components. They go into the
+`downloads` directory on `controlplane01` and are copied to the other nodes from there, so each
+binary is fetched from the internet only once.
+
+The binaries are listed in `downloads.txt`:
 
 ```bash
 cat downloads.txt
 ```
 
-Download the binaries listed in the `downloads.txt` file using the `wget` command:
+Download them:
 
 ```bash
-wget -q --progress=bar:force \
+wget -q --show-progress \
   --https-only \
   --timestamping \
   -P downloads \
   -i downloads.txt
 ```
 
-Depending on your internet connection speed it may take a while to download the `560` megabytes of binaries, and once the download is complete, you can list them using the `ls` command:
+That is about 460 MB. List the downloaded files:
 
 ```bash
-ls -loh downloads
+ls -oh downloads
 ```
 
 ```text
-total 561M
--rw-r--r--. 1 vagrant 46M Oct 14 20:47 containerd-1.7.23-linux-amd64.tar.gz
--rw-r--r--. 1 vagrant 18M Aug 13 10:48 crictl-v1.31.1-darwin-amd64.tar.gz
--rw-r--r--. 1 vagrant 20M Sep 10 18:31 etcd-v3.5.16-linux-amd64.tar.gz
--rw-r--r--. 1 vagrant 87M Oct 23 04:41 kube-apiserver
--rw-r--r--. 1 vagrant 81M Oct 23 04:41 kube-controller-manager
--rw-r--r--. 1 vagrant 54M Oct 23 04:41 kubectl
--rw-r--r--. 1 vagrant 74M Oct 23 04:41 kubelet
--rw-r--r--. 1 vagrant 62M Oct 23 04:41 kube-proxy
--rw-r--r--. 1 vagrant 61M Oct 23 04:41 kube-scheduler
--rw-r--r--. 1 vagrant 11M Oct 21 22:31 runc.amd64
+total 463M
+-rw-r--r--. 1 fedora 35M Sep 24 23:40 containerd-2.4.1-linux-amd64.tar.gz
+-rw-r--r--. 1 fedora 19M Sep  1 08:40 crictl-v1.37.0-linux-amd64.tar.gz
+-rw-r--r--. 1 fedora 23M Sep 22 21:18 etcd-v3.7.2-linux-amd64.tar.gz
+-rw-r--r--. 1 fedora 92M Sep 23 19:12 kube-apiserver
+-rw-r--r--. 1 fedora 76M Sep 23 19:12 kube-controller-manager
+-rw-r--r--. 1 fedora 60M Sep 23 19:12 kubectl
+-rw-r--r--. 1 fedora 59M Sep 23 19:12 kubelet
+-rw-r--r--. 1 fedora 44M Sep 23 19:12 kube-proxy
+-rw-r--r--. 1 fedora 49M Sep 23 19:12 kube-scheduler
+-rw-r--r--. 1 fedora 11M Sep 25 19:20 runc.amd64
 ```
+
+Sizes and dates will differ a little.
 
 ## Copy Binaries to every node
 
 ```bash
-for instance in controlplane02 controlplane03 node01 node02 ; do
-  scp downloads/* ${instance}:~/downloads/
+for instance in controlplane02 controlplane03 node01 node02; do
+  scp -rq downloads ${instance}:~/
 done
 ```
 
 ## Install kubectl
 
-The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl) command line utility is used to interact with the Kubernetes API Server. Install `kubectl` from the official release binaries:
-
-Reference: [https://kubernetes.io/docs/tasks/tools/install-kubectl/](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-
-We will be using `kubectl` early on to generate `kubeconfig` files for the controlplane components.
+The [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl) command line utility is used
+to interact with the Kubernetes API Server. You will also use it in Lab 5 to generate kubeconfig
+files for the control plane components.
 
 ```bash
-sudo cp downloads/kubectl /usr/local/bin/
-sudo chmod +x /usr/local/bin/kubectl
+sudo install -m 0755 downloads/kubectl /usr/local/bin/
 ```
 
 ### Verification
 
-Verify `kubectl` is installed:
-
-```
+```bash
 kubectl version --client
 ```
 
-output will be similar to this, although versions may be newer:
-
-```
-Client Version: v1.31.2
-Kustomize Version: v5.4.2
+```text
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
 ```
 
 Next: [Certificate Authority](04-certificate-authority.md)<br>
-Prev: Compute Resources ([KVM](02-compute-resources.md))
+Prev: [Compute Resources](02-compute-resources.md)
