@@ -1,0 +1,28 @@
+# The Calico installation for this cluster, applied after the operator.
+#
+# Based on the upstream v3.32.2 manifests/custom-resources.yaml, with two
+# changes:
+#
+#   - The IP pool is the cluster's pod network, 10.244.0.0/16 -- the same
+#     POD_CIDR the controller manager and kube-proxy were given. Upstream's
+#     default is 192.168.0.0/16, which disagrees with every other component
+#     about where pods live.
+#   - Only the Installation. Upstream also creates the Calico API server,
+#     Goldmane and Whisker. The API server registers an aggregated API, which
+#     this cluster's kube-apiserver is not configured to front, and the other
+#     two are flow-log observability that costs memory the workers would
+#     rather give to Ghost.
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    # The ipPools section cannot be modified after install.
+    ipPools:
+      - name: default-ipv4-ippool
+        blockSize: 26
+        cidr: 10.244.0.0/16
+        encapsulation: VXLANCrossSubnet
+        natOutgoing: Enabled
+        nodeSelector: all()

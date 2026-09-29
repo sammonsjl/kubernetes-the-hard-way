@@ -44,6 +44,11 @@ O = Kubernetes
 # In order to be authorized by the Node Authorizer, Kubelets must use a credential
 # that identifies them as being in the `system:nodes` group, with a username
 # of `system:node:<nodeName>`.
+#
+# The same certificate is the kubelet's *serving* certificate, and the API
+# server reaches a kubelet (for logs, exec and port-forward) at the node's IP
+# address. With --kubelet-certificate-authority set, that IP has to be in the
+# SAN or every one of those commands fails verification.
 
 [node01]
 distinguished_name = node01_distinguished_name
@@ -56,7 +61,7 @@ extendedKeyUsage     = clientAuth, serverAuth
 keyUsage             = critical, digitalSignature, keyEncipherment
 nsCertType           = client
 nsComment            = "Node01 Certificate"
-subjectAltName       = DNS:node01, IP:127.0.0.1
+subjectAltName       = DNS:node01, IP:${NODE01}, IP:127.0.0.1
 subjectKeyIdentifier = hash
 
 [node01_distinguished_name]
@@ -74,7 +79,7 @@ extendedKeyUsage     = clientAuth, serverAuth
 keyUsage             = critical, digitalSignature, keyEncipherment
 nsCertType           = client
 nsComment            = "Node02 Certificate"
-subjectAltName       = DNS:node02, IP:127.0.0.1
+subjectAltName       = DNS:node02, IP:${NODE02}, IP:127.0.0.1
 subjectKeyIdentifier = hash
 
 [node02_distinguished_name]
@@ -112,7 +117,7 @@ extendedKeyUsage     = clientAuth, serverAuth
 keyUsage             = critical, digitalSignature, keyEncipherment
 nsCertType           = client
 nsComment            = "Kube Controller Manager Certificate"
-subjectAltName       = DNS:kube-proxy, IP:127.0.0.1
+subjectAltName       = DNS:kube-controller-manager, IP:127.0.0.1
 subjectKeyIdentifier = hash
 
 [kube-controller-manager_distinguished_name]
@@ -141,8 +146,8 @@ O = system:kube-scheduler
 # API Server
 #
 # The Kubernetes API server is automatically assigned the `kubernetes`
-# internal dns name, which will be linked to the first IP address (`10.32.0.1`)
-# from the address range (`10.32.0.0/24`) reserved for internal cluster
+# internal dns name, which will be linked to the first IP address (`10.96.0.1`)
+# from the address range (`10.96.0.0/16`) reserved for internal cluster
 # services.
 
 [kube-apiserver]

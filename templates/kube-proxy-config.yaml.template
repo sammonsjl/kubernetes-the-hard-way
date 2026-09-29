@@ -1,0 +1,9 @@
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+clientConnection:
+  kubeconfig: "/var/lib/kube-proxy/kube-proxy.kubeconfig"
+mode: "iptables"
+clusterCIDR: ${POD_CIDR}
+# Accept NodePort connections on the node's own address only, not on every
+# address it has (loopback, the pod interfaces Calico adds, ...).
+nodePortAddresses: ["primary"]

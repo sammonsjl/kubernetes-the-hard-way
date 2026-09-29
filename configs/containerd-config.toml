@@ -1,0 +1,14 @@
+# containerd 2.4 configuration (schema version 4).
+#
+# Only what differs from `containerd config default`, which is one setting:
+# runc is driven through the systemd cgroup driver, so that it agrees with the
+# kubelet's cgroupDriver. When the two disagree, pods start and are then
+# killed as the kubelet and runc fight over the cgroup tree.
+#
+# `containerd config default` prints the whole file this is layered over:
+# the CNI directories (/opt/cni/bin, /etc/cni/net.d), the overlayfs
+# snapshotter and runc as the default runtime are all defaults already.
+version = 4
+
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+  SystemdCgroup = true

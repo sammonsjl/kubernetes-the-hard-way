@@ -4,12 +4,10 @@ Documentation=https://github.com/kubernetes/kubernetes
 
 [Service]
 ExecStart=/usr/local/bin/kube-scheduler \
-  --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig \
-  --leader-elect=true \
+  --config=/etc/kubernetes/config/kube-scheduler.yaml \
   --v=2
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF

@@ -13,6 +13,7 @@ clusterDomain: "cluster.local"
 clusterDNS:
   - ${CLUSTER_DNS}
 cgroupDriver: systemd
+failSwapOn: true
 containerRuntimeEndpoint: "unix:///var/run/containerd/containerd.sock"
 podCIDR: ${POD_CIDR}
 resolvConf: "/run/systemd/resolve/resolv.conf"
