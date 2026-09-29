@@ -1,0 +1,4 @@
+namespace: ghost
+resources:
+  - mysql.yaml
+  - ghost.yaml
