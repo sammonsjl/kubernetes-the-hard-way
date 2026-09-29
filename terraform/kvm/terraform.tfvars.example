@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and change what you need. Nothing here is secret:
+# this configuration talks to libvirt on this machine, not to an API with a token.
+
+# Fedora release. Unset, every apply rolls to the newest stable Fedora. Once
+# your lab is up, `terraform output base_image` prints the number to put here
+# so it stops moving under you.
+# fedora_release = 44
+
+# No /dev/kvm (no VT-x/AMD-V, or it is off in the firmware)? Software emulation
+# boots, but every lab will crawl.
+# domain_type = "qemu"
+
+# 32 GB or more on this machine? Roomier nodes. Terraform replaces this map
+# wholesale, so list all six.
+# nodes = {
+#   controlplane01 = { ip = "192.168.100.11", mac = "52:54:00:4b:08:11", memory = 2048, vcpu = 2 }
+#   controlplane02 = { ip = "192.168.100.12", mac = "52:54:00:4b:08:12", memory = 2048, vcpu = 2 }
+#   controlplane03 = { ip = "192.168.100.13", mac = "52:54:00:4b:08:13", memory = 2048, vcpu = 2 }
+#   node01         = { ip = "192.168.100.21", mac = "52:54:00:4b:08:21", memory = 6144, vcpu = 4 }
+#   node02         = { ip = "192.168.100.22", mac = "52:54:00:4b:08:22", memory = 6144, vcpu = 4 }
+#   loadbalancer   = { ip = "192.168.100.30", mac = "52:54:00:4b:08:30", memory = 1024, vcpu = 1 }
+# }

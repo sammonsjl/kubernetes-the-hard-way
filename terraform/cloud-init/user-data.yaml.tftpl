@@ -1,0 +1,54 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}
+preserve_hostname: false
+
+users:
+  - name: ${guest_user}
+    groups: wheel
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+
+# Minimal prep, and nothing more. Everything Kubernetes needs -- kernel
+# modules, sysctls, swap, SELinux, packages for the worker and load balancer
+# roles -- is done BY HAND in the labs. This is a hard-way tutorial, so
+# provisioning stays out of the way.
+#
+# These are the tools the labs lean on from the first command: dig
+# (bind-utils) to look up node addresses, envsubst (gettext-envsubst) to
+# render the templates, openssl for the PKI, wget for the downloads.
+packages:
+  - vim
+  - curl
+  - jq
+  - git
+  - wget
+  - tmux
+  - bind-utils
+  - openssl
+  - gettext-envsubst
+
+write_files:
+  # This node's own address, for the templates that bind or advertise on it
+  # (etcd, kube-apiserver, kubelet). ARCH picks the release binaries.
+  - path: /etc/profile.d/kthw.sh
+    permissions: "0644"
+    content: |
+      # Written by cloud-init from terraform/kvm. See Lab 2.
+      export PRIMARY_IP=${primary_ip}
+      export ARCH=amd64
+
+runcmd:
+  # The cloud image maps its own hostname to a loopback address. Leave it and
+  # `controlplane01` resolves to 127.0.1.1 *on controlplane01 itself* -- and
+  # the labs read every node address with dig/getent, so it would land in the
+  # certificate SANs and the etcd member list.
+  - [ sh, -c, "sed -i '/127.0.1.1/d' /etc/hosts" ]
+  # Every node needs every other node's name from Lab 3 onward -- scp targets,
+  # certificate SANs, the etcd peer list, the HAProxy backends.
+  - [ sh, -c, "grep -q loadbalancer /etc/hosts || printf '%s\\n' ${hosts_entries} >> /etc/hosts" ]
+
+final_message: "kthw: ${hostname} ready after $UPTIME seconds"

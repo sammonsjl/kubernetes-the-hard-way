@@ -1,13 +1,22 @@
 .idea
 .vscode
-ubuntu-jammy*.log
-.vagrant
-temp
+
+# Terraform state and provider plugins. State is per-machine and describes
+# disks and networks on YOUR host -- never commit it.
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+terraform.tfvars
+*.auto.tfvars
+
+# Generated per-machine by terraform (absolute paths, local key location)
+terraform/kvm/ssh_config
+
+# Lab artifacts, if you generate any on this machine rather than on
+# controlplane01. Per-cluster key material must never be committed.
 *.crt
 *.key
 *.pem
 *.csr
-*csr.json
 *.kubeconfig
-quick-steps
-venv
