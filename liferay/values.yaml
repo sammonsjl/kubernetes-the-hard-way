@@ -1,0 +1,69 @@
+# Values for Liferay's own Helm chart, liferay-default, on this cluster.
+#
+# Only what differs from the chart's defaults is here. `helm show values` on
+# the chart prints the rest. The chart assumes a cloud cluster with 8 GiB to
+# give one pod; most of this file is cutting it down to fit the larger worker.
+#
+# There is no database server and no search server. The chart can run both as
+# `dependencies`, and a real installation would. With neither configured,
+# Liferay falls back to what a bundle does on a laptop: an embedded HSQL
+# database in files under data/, and an Elasticsearch it starts as a child
+# process. One pod, and both keep their data on its volume.
+#
+# One thing comes from an object you create by hand in Lab 12 rather than
+# from this file: the liferay-front-door ConfigMap, holding the address
+# readers use.
+
+# The chart's default image is liferay/dxp, the commercial edition. Once the
+# trial licence in that image has expired, every page redirects to a licence
+# activation form. This is the image liferay/build-image.sh makes from a Liferay
+# compiled from source, which needs no licence. No registry holds it: Lab 12
+# loads it into containerd on each worker, and `Never` keeps the kubelet from
+# trying to pull it.
+image:
+  repository: localhost/kthw/liferay
+  tag: source
+  pullPolicy: Never
+
+# The chart's volume claims name no StorageClass, and this cluster has no
+# default one. This gives them the class from Lab 11.
+persistence:
+  defaultStorageClassName: local-path
+
+# The chart asks for 2 CPUs and 6Gi, which is more than a whole worker here.
+# The request is what the pod really uses, so the scheduler sees the truth:
+# only node02 has this much to give, and that is where the pod will go.
+resources:
+  requests:
+    cpu: 500m
+    memory: 3584Mi
+  limits:
+    memory: 4608Mi
+
+# The chart gives Liferay 16 minutes to answer for the first time before it
+# restarts the container. A first start creates the whole database schema, and
+# on a busy host it can take longer than that. This makes it 31.
+startupProbe:
+  failureThreshold: 180
+
+# Added to the Liferay container's environment, after the chart's own `env`.
+# Liferay reads any portal property from a variable named LIFERAY_ plus the
+# property's name, with _PERIOD_ for each dot. A variable wins over the same
+# property in a file, including the files the chart writes.
+customEnv:
+  x-kthw:
+    # The heap. The image's default is sized for a much larger pod.
+    - name: LIFERAY_JVM_OPTS
+      value: -Xms1g -Xmx2g
+
+# Every key of this ConfigMap becomes an environment variable. It holds one,
+# company.default.virtual.host.name: the host name Liferay answers to.
+customEnvFrom:
+  x-kthw:
+    - configMapRef:
+        name: liferay-front-door
+
+portalProperties: |
+  # The heap of the Elasticsearch that Liferay starts beside itself. The
+  # default is 1 to 2 GiB; an empty site needs a fraction of that.
+  configuration.override.com.liferay.portal.search.elasticsearch8.configuration.ElasticsearchConfiguration_sidecarJVMOptions=["-Xms512m","-Xmx512m"]

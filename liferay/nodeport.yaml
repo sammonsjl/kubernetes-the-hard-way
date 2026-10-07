@@ -1,0 +1,26 @@
+# The way in from outside the cluster, for the Liferay that the Helm chart
+# installs.
+#
+# The chart's own Service is a ClusterIP. Its `service.type` can be changed to
+# NodePort, but not with a fixed port: the chart renders the same port list
+# into a headless Service, where `nodePort` is not allowed. So the fixed port
+# is a second Service, selecting the same pods by the labels the chart gives
+# them.
+apiVersion: v1
+kind: Service
+metadata:
+  name: liferay-nodeport
+  labels:
+    app: liferay-default
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: http
+      # Fixed, so HAProxy on the load balancer can name it.
+      nodePort: 30080
+      name: http
+  selector:
+    app: liferay-default
+    app.kubernetes.io/instance: liferay
+    app.kubernetes.io/name: liferay-default

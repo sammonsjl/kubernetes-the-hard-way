@@ -46,4 +46,4 @@ And the lab SSH key, if you won't be back:
 rm ~/.ssh/kthw_lab_ed25519 ~/.ssh/kthw_lab_ed25519.pub
 ```
 
-Prev: [Deploy Ghost](12-deploy-ghost.md)
+Prev: [Deploy Liferay with Helm](12-deploy-liferay.md)

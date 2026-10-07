@@ -12,15 +12,16 @@ name with `ssh controlplane01` and so on. Nothing Kubernetes-specific is on them
 | `controlplane01` | `192.168.100.11` | etcd and the control plane; also where you run the admin commands | 1536 MB | 2    |
 | `controlplane02` | `192.168.100.12` | etcd and the control plane                                         | 1536 MB | 2    |
 | `controlplane03` | `192.168.100.13` | etcd and the control plane                                         | 1536 MB | 2    |
-| `node01`         | `192.168.100.21` | worker: containerd, kubelet, kube-proxy                            | 3072 MB | 2    |
-| `node02`         | `192.168.100.22` | worker                                                             | 3072 MB | 2    |
+| `node01`         | `192.168.100.21` | worker: containerd, kubelet, kube-proxy                            | 2048 MB | 2    |
+| `node02`         | `192.168.100.22` | worker, with room for Liferay in Lab 12                            | 5632 MB | 2    |
 | `loadbalancer`   | `192.168.100.30` | HAProxy in front of the three API servers                          | 512 MB  | 1    |
 
 Three control plane nodes are the smallest etcd cluster that tolerates losing a member. The load
 balancer gives clients one stable address for the API, whichever API server is answering.
 
-The workers are the largest because every pod runs on them, including the Calico, CoreDNS and
-Ghost pods from Labs 11 and 12. On a host with 32 GB, `terraform/kvm/terraform.tfvars.example`
+Every pod runs on the workers: Calico, CoreDNS and the storage provisioner from Lab 11, and
+Liferay from Lab 12. Liferay is a single pod of about 3.5 GiB, which is why `node02` is much the
+larger of the two. On a host with 32 GB, `terraform/kvm/terraform.tfvars.example`
 has roomier sizes.
 
 ## Bring them up
@@ -133,7 +134,8 @@ loadbalancer 192.168.100.30 -> 192.168.100.30
 download of Fedora's release index from `fedoraproject.org` being cut off partway. Nothing has
 been created yet. Run `terraform apply` again.
 
-**SSH hangs or is refused.** cloud-init may still be running. Check a node's console log, where
+**SSH hangs or is refused, or the Verify loop prints no address after the arrow.** cloud-init may
+still be running: SSH answers before it has installed the tools and written `/etc/hosts`. Check a node's console log, where
 cloud-init prints `kthw: <node> ready after N seconds` when it is done:
 
 ```bash

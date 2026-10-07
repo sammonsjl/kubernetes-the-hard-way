@@ -26,8 +26,9 @@ release binary you install by hand and run under a systemd unit you write yourse
 * [coredns](https://github.com/coredns/coredns) v1.14.7
 * [local-path-provisioner](https://github.com/rancher/local-path-provisioner) v0.0.37
 
-When it is built, it runs [Ghost](https://ghost.org/) 6 on MySQL 8.4, served to your browser
-through the cluster's own load balancer.
+When it is built, it runs [Liferay](https://www.liferay.com/), from a container image you build
+from a Liferay compiled from source, installed with Liferay's own Helm chart and served to your
+browser through the cluster's own load balancer.
 
 ### Node configuration
 
@@ -37,7 +38,7 @@ through the cluster's own load balancer.
                  ┌───────────────┴────────────────┐
                  │ loadbalancer  192.168.100.30   │  HAProxy
                  │   :6443 → the API servers      │
-                 │   :80   → Ghost (NodePort)     │
+                 │   :80   → Liferay (NodePort)   │
                  └───────┬────────────────┬───────┘
           ┌──────────────┘                └───────────────┐
 ┌─────────┴──────────────────────┐   ┌────────────────────┴────────────┐
@@ -45,8 +46,8 @@ through the cluster's own load balancer.
 │ controlplane02  .12            │   │ node02  .22                     │
 │ controlplane03  .13            │   │   containerd · kubelet ·        │
 │   etcd · kube-apiserver ·      │   │   kube-proxy                    │
-│   controller-manager ·         │   │   Calico · CoreDNS · Ghost ·    │
-│   scheduler                    │   │   MySQL                         │
+│   controller-manager ·         │   │   Calico · CoreDNS ·            │
+│   scheduler                    │   │   Liferay (node02)              │
 └────────────────────────────────┘   └─────────────────────────────────┘
                all on the kthw libvirt NAT network, 192.168.100.0/24
 ```
@@ -54,9 +55,9 @@ through the cluster's own load balancer.
 * Three control plane nodes (`controlplane01`, `controlplane02` and `controlplane03`), running
   etcd and the control plane components as systemd services. `controlplane01` is also where you
   run the admin commands.
-* Two worker nodes (`node01` and `node02`).
+* Two worker nodes (`node01` and `node02`). `node02` is the larger, to hold Liferay.
 * One load balancer VM running [HAProxy](https://www.haproxy.org/). It balances requests across
-  the three API servers and is the endpoint in your kubeconfig. In the last lab it becomes Ghost's
+  the three API servers and is the endpoint in your kubeconfig. In the last lab it becomes Liferay's
   front door as well.
 
 The VMs are Fedora Cloud, built by [Terraform](https://developer.hashicorp.com/terraform) against
@@ -66,7 +67,7 @@ pin one.
 ## What you need
 
 * A Linux workstation with KVM (`/dev/kvm`), libvirt and Terraform
-* 16 GB of RAM at minimum, 24 GB comfortably (the six VMs are allocated 11 GB), and ~20 GB of free disk
+* 16 GB of RAM at minimum, 24 GB comfortably (the six VMs are allocated 12.5 GB), and ~20 GB of free disk
 * Outbound internet access
 
 Details are in [Lab 1](docs/01-prerequisites.md).
@@ -84,7 +85,7 @@ Details are in [Lab 1](docs/01-prerequisites.md).
 * [Bootstrapping the Kubernetes Worker Nodes](docs/09-bootstrapping-kubernetes-workers.md)
 * [Configuring kubectl for Remote Access](docs/10-configuring-kubectl.md)
 * [Cluster Add-ons](docs/11-cluster-addons.md)
-* [Deploy Ghost](docs/12-deploy-ghost.md)
+* [Deploy Liferay with Helm](docs/12-deploy-liferay.md)
 * [Cleaning Up](docs/99-cleanup.md)
 
 ## Repository layout
@@ -95,6 +96,6 @@ Details are in [Lab 1](docs/01-prerequisites.md).
 | `templates/`           | Configs and systemd units the labs fill in with node addresses, using `envsubst`    |
 | `configs/`             | Configs and units used as-is                                                        |
 | `addons/`              | The Calico installation and the CoreDNS manifest (Lab 11)                           |
-| `ghost/`               | MySQL and Ghost manifests (Lab 12)                                                  |
+| `liferay/`             | The image build script, Helm values and NodePort Service for Liferay (Lab 12)       |
 | `downloads.txt`        | The pinned release binaries                                                         |
 | `cert_verify.sh`       | An optional checker for the certificates and kubeconfigs in Labs 4, 5, 8 and 9      |

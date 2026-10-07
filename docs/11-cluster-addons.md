@@ -151,7 +151,7 @@ kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisione
 kubectl rollout status deployment/local-path-provisioner -n local-path-storage
 ```
 
-It creates a StorageClass named `local-path`. Lab 12's claims ask for it by name:
+It creates a StorageClass named `local-path`. Lab 12's volume claim asks for it by name:
 
 ```bash
 kubectl get storageclass
@@ -184,5 +184,5 @@ local-path-storage   local-path-provisioner-7c7ff4f446-xrwhr    1/1     Running 
 tigera-operator      tigera-operator-74c8fbcbcc-ftvwp           1/1     Running   0          2m32s
 ```
 
-Next: [Deploy Ghost](12-deploy-ghost.md)<br>
+Next: [Deploy Liferay with Helm](12-deploy-liferay.md)<br>
 Prev: [Configuring kubectl for Remote Access](10-configuring-kubectl.md)

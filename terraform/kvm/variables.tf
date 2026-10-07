@@ -104,12 +104,14 @@ variable "guest_user" {
 
 variable "nodes" {
   description = <<-EOT
-    The six machines, sized for a 16 GB workstation: 11 GB allocated in all.
+    The six machines, sized for a 16 GB workstation: 12.5 GB allocated in all.
 
     A guest only takes host memory as it touches it, and the balloon device
     gives freed pages back, so the idle cluster uses well under this. The
-    workers are the largest because they run every pod, Ghost and MySQL
-    included; the control plane nodes run etcd and three Go binaries.
+    workers run every pod. node02 is much larger than node01 on purpose:
+    Liferay (Lab 12) is one pod of about 3.5 GiB, and memory split evenly
+    would leave neither worker room for it. node01 carries the add-ons. The
+    control plane nodes run etcd and three Go binaries.
 
     mac pins each node's NIC, and cloud-init's network-config matches on it.
   EOT
@@ -123,8 +125,8 @@ variable "nodes" {
     controlplane01 = { ip = "192.168.100.11", mac = "52:54:00:4b:08:11", memory = 1536, vcpu = 2 }
     controlplane02 = { ip = "192.168.100.12", mac = "52:54:00:4b:08:12", memory = 1536, vcpu = 2 }
     controlplane03 = { ip = "192.168.100.13", mac = "52:54:00:4b:08:13", memory = 1536, vcpu = 2 }
-    node01         = { ip = "192.168.100.21", mac = "52:54:00:4b:08:21", memory = 3072, vcpu = 2 }
-    node02         = { ip = "192.168.100.22", mac = "52:54:00:4b:08:22", memory = 3072, vcpu = 2 }
+    node01         = { ip = "192.168.100.21", mac = "52:54:00:4b:08:21", memory = 2048, vcpu = 2 }
+    node02         = { ip = "192.168.100.22", mac = "52:54:00:4b:08:22", memory = 5632, vcpu = 2 }
     loadbalancer   = { ip = "192.168.100.30", mac = "52:54:00:4b:08:30", memory = 512, vcpu = 1 }
   }
 }
