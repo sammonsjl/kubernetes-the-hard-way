@@ -14,13 +14,13 @@ files the later labs render and apply:
 
 - `templates/`: systemd units and configs that `envsubst` fills in with addresses
 - `configs/`: the files that are used as-is
-- `addons/` and `liferay/`: the manifests and Helm values for Labs 11 and 12
+- `addons/` and `apps/`: the manifests and Helm values for Labs 11 and 12
 - `downloads.txt`: the list of binaries to fetch
 - `cert_verify.sh`: an optional checker for Labs 4, 5, 8 and 9
 
 ```bash
 for n in controlplane01 controlplane02 controlplane03 node01 node02; do
-  scp -rq templates configs addons liferay downloads.txt cert_verify.sh ${n}:~/
+  scp -rq templates configs addons apps downloads.txt cert_verify.sh ${n}:~/
 done
 ```
 

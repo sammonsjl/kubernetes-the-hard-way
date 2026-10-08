@@ -1,0 +1,16 @@
+# Values for the headlamp Helm chart on this cluster.
+#
+# Only what differs from the chart's defaults is here. `helm show values` on
+# the chart prints the rest.
+
+# A fixed NodePort, so HAProxy on the load balancer can name it.
+service:
+  type: NodePort
+  nodePort: 30081
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

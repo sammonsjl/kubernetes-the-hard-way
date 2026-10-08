@@ -184,5 +184,5 @@ local-path-storage   local-path-provisioner-7c7ff4f446-xrwhr    1/1     Running 
 tigera-operator      tigera-operator-74c8fbcbcc-ftvwp           1/1     Running   0          2m32s
 ```
 
-Next: [Deploy Liferay with Helm](12-deploy-liferay.md)<br>
+Next: [Deploy Uptime Kuma and Headlamp with Helm](12-deploy-uptime-kuma.md)<br>
 Prev: [Configuring kubectl for Remote Access](10-configuring-kubectl.md)

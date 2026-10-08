@@ -79,7 +79,7 @@ Enforcing
 Fedora's `container-selinux` policy is already installed, and its file contexts cover
 `/usr/local/bin` as well as `/usr/bin`. So the binaries you are about to install get the right
 domains without any relabelling: `containerd` runs as `container_runtime_t`, the kubelet as
-`kubelet_t`, and every container, from Calico to Liferay, as `spc_t`. Once the cluster is running
+`kubelet_t`, and every container, from Calico to Headlamp, as `spc_t`. Once the cluster is running
 you can see this with `ps -eZ`.
 
 `spc_t` is the *super-privileged container* domain, so this is not strict. containerd's

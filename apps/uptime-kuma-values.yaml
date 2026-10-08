@@ -1,0 +1,39 @@
+# Values for the uptime-kuma Helm chart on this cluster.
+#
+# Only what differs from the chart's defaults is here. `helm show values` on
+# the chart prints the rest.
+
+# The chart's Service is a ClusterIP. A NodePort makes every node answer for
+# it, and a fixed port lets HAProxy on the load balancer name it.
+service:
+  type: NodePort
+  nodePort: 30080
+
+# Uptime Kuma keeps its monitors and their history in a SQLite file. The
+# chart's claim names no StorageClass, and this cluster has no default one, so
+# name the class from Lab 11. The default size of 4Gi is far more than a lab
+# needs.
+volume:
+  storageClassName: local-path
+  size: 1Gi
+
+# Uptime Kuma 2 can also use MariaDB, and its first page asks which. Naming the
+# database here skips that page.
+podEnv:
+  - name: UPTIME_KUMA_DB_TYPE
+    value: sqlite
+
+# The chart runs Uptime Kuma as a Deployment. A ReadWriteOnce volume cannot be
+# held by the old pod and the new one at the same time, so an update has to
+# stop the old pod before it starts the new one.
+strategy:
+  type: Recreate
+
+# The chart sets no requests or limits. A request tells the scheduler what the
+# pod needs, and a limit stops a leak from taking the node with it.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 384Mi

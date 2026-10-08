@@ -13,15 +13,14 @@ name with `ssh controlplane01` and so on. Nothing Kubernetes-specific is on them
 | `controlplane02` | `192.168.100.12` | etcd and the control plane                                         | 1536 MB | 2    |
 | `controlplane03` | `192.168.100.13` | etcd and the control plane                                         | 1536 MB | 2    |
 | `node01`         | `192.168.100.21` | worker: containerd, kubelet, kube-proxy                            | 2048 MB | 2    |
-| `node02`         | `192.168.100.22` | worker, with room for Liferay in Lab 12                            | 5632 MB | 2    |
+| `node02`         | `192.168.100.22` | worker                                                             | 2048 MB | 2    |
 | `loadbalancer`   | `192.168.100.30` | HAProxy in front of the three API servers                          | 512 MB  | 1    |
 
 Three control plane nodes are the smallest etcd cluster that tolerates losing a member. The load
 balancer gives clients one stable address for the API, whichever API server is answering.
 
 Every pod runs on the workers: Calico, CoreDNS and the storage provisioner from Lab 11, and
-Liferay from Lab 12. Liferay is a single pod of about 3.5 GiB, which is why `node02` is much the
-larger of the two. On a host with 32 GB, `terraform/kvm/terraform.tfvars.example`
+the two applications from Lab 12. On a host with 32 GB, `terraform/kvm/terraform.tfvars.example`
 has roomier sizes.
 
 ## Bring them up

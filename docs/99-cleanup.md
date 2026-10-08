@@ -46,4 +46,4 @@ And the lab SSH key, if you won't be back:
 rm ~/.ssh/kthw_lab_ed25519 ~/.ssh/kthw_lab_ed25519.pub
 ```
 
-Prev: [Deploy Liferay with Helm](12-deploy-liferay.md)
+Prev: [Deploy Uptime Kuma and Headlamp with Helm](12-deploy-uptime-kuma.md)
